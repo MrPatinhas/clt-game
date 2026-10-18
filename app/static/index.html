@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CLT — Cartola Legends of Time (2014–2025)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <!-- TOP NAVIGATION & CHRONO CONTROLS -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo-frame">
+        <img src="/assets/ui/clt_logo.png" alt="Cartola Legends of Time Logo" class="brand-logo-img" />
+      </div>
+      <div class="brand-text">
+        <div class="brand-era-pill">⏳ CRÔNICAS DO BRASILEIRÃO · 2014–2025</div>
+        <h1>CARTOLA <span class="brand-highlight">LEGENDS OF TIME</span></h1>
+        <span class="subtitle">Roguelike Temporal Fantasy Strategy · 39 Clubes · 12 Temporadas</span>
+      </div>
+    </div>
+
+    <div class="topbar-controls">
+      <div class="control-group">
+        <label for="ai-difficulty">Oráculo IA</label>
+        <select id="ai-difficulty">
+          <option value="rookie">Estagiário do Tempo (Média Geral)</option>
+          <option value="veteran" selected>Cartoleiro Pro (Média do Ano)</option>
+          <option value="oracle">Oráculo Temporal (Score Real + Ruído)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="series-mode">Série Temporal</label>
+        <select id="series-mode">
+          <option value="bo5" selected>Melhor de 5 (3 Vitórias)</option>
+          <option value="bo3">Melhor de 3 (2 Vitórias)</option>
+        </select>
+      </div>
+
+      <button id="btn-open-tutorial-tab" class="btn-gallery" title="Abrir Tutorial Passo a Passo Ilustrado com Exemplos de Turno">
+        📖 Como Jogar (Tutorial)
+      </button>
+
+      <button id="btn-open-codex-tab" class="btn-gallery" title="Guia Completo: Era 2014–2025, 3 Power-Ups e 8 Regras Malucas">
+        📜 Regras, Power-Ups & Era
+      </button>
+
+      <button id="btn-open-art-gallery" class="btn-gallery" title="Inspecionar Emblemas, Power-Ups e Regras Malucas geradas">
+        🎨 Acervo (26)
+      </button>
+
+      <button id="btn-theme-toggle" class="btn-gallery" title="Alternar entre Modo Escuro (Noturno) e Modo Claro (Pergaminho Creme)">
+        ☀️ Modo Claro
+      </button>
+
+      <button id="btn-reroll-run" class="btn-chrono" title="Abre uma fenda temporal e sorteia 7 novos Time Squads do pool de ~300 lendas">
+        <span class="gear-spin-icon">⚙️</span> Viajar no Tempo <span id="run-badge" class="mono-badge">Linha #1</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- STAGE STEPPER NAVIGATION BAR (ALL 8 STAGES) -->
+  <nav class="stage-stepper-bar" id="stage-stepper">
+    <button class="stepper-item active" data-step="1">
+      <span class="stepper-num">1</span>
+      <span class="stepper-label">Time Squads</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="2" disabled>
+      <span class="stepper-num">2</span>
+      <span class="stepper-label">Ano & Rodada</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="3" disabled>
+      <span class="stepper-num">3</span>
+      <span class="stepper-label">Bucket of Souls</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="4" disabled>
+      <span class="stepper-num">4</span>
+      <span class="stepper-label">Highlights of Destiny</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="5" disabled>
+      <span class="stepper-num">5</span>
+      <span class="stepper-label">Regra Maluca</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="6" disabled>
+      <span class="stepper-num">6</span>
+      <span class="stepper-label">Escalação & Campo</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="7" disabled>
+      <span class="stepper-num">7</span>
+      <span class="stepper-label">Intervalo & Power-Ups</span>
+    </button>
+    <span class="stepper-divider">›</span>
+    <button class="stepper-item" data-step="8" disabled>
+      <span class="stepper-num">8</span>
+      <span class="stepper-label">Placar & Relatório</span>
+    </button>
+  </nav>
+
+  <!-- PERSISTENT MATCH TELEMETRY HUD HEADER (YEAR, ROUND, SERIES, RULE & RESET) -->
+  <div id="match-hud-bar" class="match-hud-bar hidden">
+    <div class="hud-pills-wrap">
+      <div class="hud-telemetry-pill hud-series">
+        <span class="hud-label">SÉRIE TEMPORAL</span>
+        <span class="hud-value" id="hud-series-val">Partida #1 · 0 x 0</span>
+      </div>
+
+      <div class="hud-telemetry-pill hud-year" id="hud-year-box">
+        <span class="hud-label">⏳ TEMPORADA (ANO)</span>
+        <span class="hud-value" id="hud-year-val">A definir</span>
+      </div>
+
+      <div class="hud-telemetry-pill hud-round" id="hud-round-box">
+        <span class="hud-label">🧭 RODADA</span>
+        <span class="hud-value" id="hud-round-val">A definir</span>
+      </div>
+
+      <div class="hud-telemetry-pill hud-destiny" id="hud-destiny-box">
+        <span class="hud-label">🔍 DESTINY</span>
+        <span class="hud-value" id="hud-destiny-val">Pendente</span>
+      </div>
+
+      <div class="hud-telemetry-pill hud-rule" id="hud-rule-box">
+        <span class="hud-label">🎩 REGRA MALUCA</span>
+        <span class="hud-value" id="hud-rule-val">Oculta</span>
+      </div>
+    </div>
+
+    <div class="hud-actions-wrap">
+      <span class="hud-lock-indicator" title="Etapas concluídas ficam travadas para impedir manipulação">🔒 Anti-Rigging Ativo</span>
+      <button id="btn-hud-reset-run" class="btn-hud-reset" title="Reseta toda a partida/série e sorteia uma nova linha do tempo do zero">
+        🔄 Resetar Partida / Nova Run
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN STAGE CONTAINER -->
+  <main class="stage-container">
+
+    <!-- ================================================================== -->
+    <!-- STAGE 1 VIEW: THE 7 TIME SQUADS & 24 PLAYER SHOWCASE               -->
+    <!-- ================================================================== -->
+    <div id="stage-view-1" class="stage-view">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 1 · CONVOCAÇÃO TEMPORAL DOS ESQUADRÕES</div>
+        <h2>Escolha o Seu Time Squad (24 Lendas do Tempo)</h2>
+        <p>
+          Cada cápsula temporal contém <strong>2 GOL · 4 ZAG · 4 LAT · 8 MEI · 5 ATA · 1 TEC</strong> recrutados entre ~300 lendas (2014–2025).
+          Use as <strong>setas do teclado (<kbd>↑</kbd> <kbd>↓</kbd> / <kbd>←</kbd> <kbd>→</kbd>)</strong> ou alterne entre <strong>Carrossel 3D</strong>, <strong>Grade Completa</strong> e <strong>Tabela Tática (24 linhas)</strong>.
+        </p>
+      </section>
+
+      <!-- 1. 3D PERSPECTIVE SQUAD DECK CAROUSEL -->
+      <section class="rooster-carousel-section" id="rooster-section-box">
+        <div class="section-bar">
+          <div class="section-title">
+            <span class="step-num">1</span>
+            <span>Cápsulas dos 7 Time Squads</span>
+            <span class="hint-pill">Setas <kbd>↑</kbd> <kbd>↓</kbd> ou clique nos Squads em ângulo</span>
+          </div>
+          <div class="carousel-nav-btns">
+            <button id="rooster-prev" class="nav-arrow-btn" aria-label="Squad Anterior">◀</button>
+            <span id="rooster-counter" class="mono-counter">1 / 7</span>
+            <button id="rooster-next" class="nav-arrow-btn" aria-label="Próximo Squad">▶</button>
+          </div>
+        </div>
+
+        <div id="temporal-vortex-overlay" class="temporal-vortex-overlay hidden">
+          <div class="vortex-core">
+            <div class="vortex-ring ring-outer"></div>
+            <div class="vortex-ring ring-middle"></div>
+            <div class="vortex-ring ring-inner"></div>
+            <img src="/assets/ui/clt_logo.png" alt="Vórtice Temporal" class="vortex-logo-spin" />
+          </div>
+          <div class="vortex-caption">
+            <div class="vortex-title">RECALIBRANDO LINHA DO TEMPO (2014–2025)...</div>
+            <div class="vortex-sub" id="vortex-status-text">Sorteando 168 Lendas entre 39 Clubes da Série A</div>
+          </div>
+        </div>
+
+        <div class="rooster-stage-3d" id="rooster-carousel-track"></div>
+      </section>
+
+      <!-- 2. PLAYER SHOWCASE (3D / GRID / 24-ROW TABLE) -->
+      <section class="player-showcase-section">
+        <div class="section-bar">
+          <div class="section-title">
+            <span class="step-num">2</span>
+            <div class="active-squad-header-inline">
+              <img id="active-rooster-emblem-mini" src="/assets/emblems/squad_a.png" alt="Emblema" class="inline-emblem-img" />
+              <span id="active-rooster-title">Time Squad A — Cartas dos Atletas</span>
+            </div>
+            <span class="hint-pill">Setas <kbd>←</kbd> <kbd>→</kbd> para girar cartas</span>
+          </div>
+
+          <div class="player-toolbar">
+            <div class="pos-filter-group" id="pos-filter-tabs">
+              <button class="pos-tab active" data-pos="ALL">Todos (24)</button>
+              <button class="pos-tab" data-pos="GOL">GOL (2)</button>
+              <button class="pos-tab" data-pos="ZAG">ZAG (4)</button>
+              <button class="pos-tab" data-pos="LAT">LAT (4)</button>
+              <button class="pos-tab" data-pos="MEI">MEI (8)</button>
+              <button class="pos-tab" data-pos="ATA">ATA (5)</button>
+              <button class="pos-tab" data-pos="TEC">TEC (1)</button>
+            </div>
+
+            <div class="view-mode-toggle">
+              <button id="btn-view-3d" class="mode-btn active">🎠 Carrossel 3D</button>
+              <button id="btn-view-grid" class="mode-btn">🔲 Grade (24)</button>
+              <button id="btn-view-table" class="mode-btn">📋 Tabela por Posição (24)</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="player-3d-wrapper" class="player-3d-wrapper">
+          <button id="player-prev" class="player-side-nav left" aria-label="Atleta Anterior">‹</button>
+          <div class="player-stage-3d" id="player-carousel-track"></div>
+          <button id="player-next" class="player-side-nav right" aria-label="Próximo Atleta">›</button>
+          <div class="player-carousel-footer">
+            <span id="player-counter" class="mono-counter">Carta 1 / 24</span>
+          </div>
+        </div>
+
+        <div id="player-grid-wrapper" class="player-grid-wrapper hidden"></div>
+        <div id="player-table-wrapper" class="player-table-wrapper hidden"></div>
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 2 VIEW: SEASON (2014-2025) & ROUND (1-38) PARAMETERS         -->
+    <!-- ================================================================== -->
+    <div id="stage-view-2" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 2 · COORDENADAS DA MÁQUINA DO TEMPO</div>
+        <h2>Defina o Ano (2014–2025) e a Rodada (1–38)</h2>
+        <p>
+          Um jogador escolhe a <strong>Temporada</strong> e o outro escolhe a <strong>Rodada</strong>.
+          <strong>Regra de Equilíbrio:</strong> Quem faz a <strong>2ª escolha</strong> aqui ganha o direito de escolher <strong>1º no Bucket of the Souls (Stage 3)</strong>!
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage2-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 3 VIEW: BUCKET OF THE SOULS (6 ACTIVE PLAYERS DRAFT)         -->
+    <!-- ================================================================== -->
+    <div id="stage-view-3" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 3 · BUCKET OF THE SOULS (RECRUTAMENTO CEGO)</div>
+        <h2>6 Almas que Entraram em Campo Nesta Rodada</h2>
+        <p>
+          Estes <strong>6 atletas (1 por posição)</strong> certamente atuaram na rodada sorteada, mas suas médias históricas estão ocultas!
+          Você pode <strong>trocar 1 atleta pela mesma posição</strong> do seu Time Squad (mutação permanente para o resto da série) ou <strong>Passar a Vez</strong>.
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage3-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 4 VIEW: HIGHLIGHTS OF DESTINY (10 MYSTERY MATCH BARS)        -->
+    <!-- ================================================================== -->
+    <div id="stage-view-4" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 4 · HIGHLIGHTS OF DESTINY (VISÃO DO ORÁCULO)</div>
+        <h2>Os 10 Confrontos da Rodada</h2>
+        <p>
+          Escolha sua revelação estratégica antes de escalar seu time: descobrir <strong>5 confrontos (apenas clubes mandante vs visitante)</strong>
+          OU descobrir <strong>2 confrontos com o placar exato (Gols e Saldo de Gols revelados)</strong>!
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage4-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 5 VIEW: CRAZY RULES (WARPED 17-SCOUT WEIGHT MATRIX)          -->
+    <!-- ================================================================== -->
+    <div id="stage-view-5" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 5 · DISTORÇÃO DAS REGRAS DO JOGO</div>
+        <h2>A Regra Maluca da Partida</h2>
+        <p>
+          O vórtice temporal alterou os pesos dos <strong>17 scouts universais</strong>! Analise os scouts valorizados (<span style="color:#10B981;font-weight:700;">BUFF</span>)
+          e penalizados (<span style="color:#E0533C;font-weight:700;">NERF</span>) antes de montar sua escalação titular no Stage 6.
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage5-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 6 VIEW: TACTICAL FORMATION, INTERACTIVE PITCH & CAPTAIN (2x) -->
+    <!-- ================================================================== -->
+    <div id="stage-view-6" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 6 · PRANCHETA TÁTICA & ESCALAÇÃO TITULAR (11 + 1 TEC)</div>
+        <h2>Escale Seus 11 Titulares, Técnico e Capitão (2x)</h2>
+        <p>
+          Escolha uma das <strong>5 formações oficiais</strong>, selecione os <strong>12 titulares</strong> do seu elenco de 24 atletas,
+          defina o <strong>Capitão (© 2x)</strong> e dê o <strong>Kick-Off</strong> quando o indicador ficar <span style="color:#10B981;font-weight:800;">VERDE</span>!
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage6-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 7 VIEW: HALF-TIME 6v6 SAMPLE, 3 SUBS & POWER-UPS             -->
+    <!-- ================================================================== -->
+    <div id="stage-view-7" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 7 · VESTIÁRIO DE INTERVALO (PLACAR 6v6, 3 TROCAS & POWER-UPS)</div>
+        <h2>Intervalo Temporal: Ajustes Táticos & Power-Up</h2>
+        <p>
+          Analise a <strong>amostra parcial 6v6</strong> do 1º tempo! Você pode acionar <strong>no máximo 1 Power-Up</strong> (uso único na série)
+          e realizar <strong>até 3 substituições</strong> (inclusive mudando a formação) antes do apito final!
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage7-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- STAGE 8 VIEW: FINAL MATCH REPORT, SCOUT BREAKDOWN & SERIES TROPHY  -->
+    <!-- ================================================================== -->
+    <div id="stage-view-8" class="stage-view hidden">
+      <section class="stage-header">
+        <div class="stage-pill">STAGE 8 · APITO FINAL & SÚMULA HISTÓRICA DA PARTIDA</div>
+        <h2>Resultado Oficial, Craque da Partida (MVP) & Scouts</h2>
+        <p>
+          Confira a pontuação detalhada de todos os titulares e reservas sob a <strong>Regra Maluca</strong> da partida
+          e avance na disputa da <strong>Série Temporal</strong>!
+        </p>
+      </section>
+
+      <section class="chrono-panel" id="stage8-container">
+        <!-- Populated dynamically by app.js -->
+      </section>
+    </div>
+
+  </main>
+
+  <!-- PERSISTENT MINIMIZED SQUAD DRAWERS (HUMAN COACH & AI ROBOT COACH) -->
+  <div id="minimized-dock" class="minimized-dock hidden">
+    <button id="dock-human-btn" class="dock-tab human-dock" title="Consultar os 24 atletas do seu Time Squad">
+      <img src="/assets/ui/human_coach.png" alt="Treinador Humano" class="dock-coach-avatar" onerror="this.style.display='none'" />
+      <div class="dock-role-stack">
+        <span class="dock-role">🧑‍💼 SEU TIME SQUAD (HUMANO)</span>
+        <span id="dock-human-name" class="dock-name">—</span>
+      </div>
+      <span class="dock-action">🔍 Consultar 24</span>
+    </button>
+
+    <div class="dock-center-status">
+      <span id="dock-stage-indicator">⏳ STAGE 2 ATIVO</span>
+    </div>
+
+    <button id="dock-ai-btn" class="dock-tab ai-dock" title="Consultar os 24 atletas do Time Squad da IA">
+      <img src="/assets/ui/robot_coach.png" alt="Oráculo Robô IA" class="dock-coach-avatar" onerror="this.style.display='none'" />
+      <div class="dock-role-stack">
+        <span class="dock-role">🤖 TIME SQUAD DA IA (ROBÔ)</span>
+        <span id="dock-ai-name" class="dock-name">—</span>
+      </div>
+      <span class="dock-action">🔍 Consultar 24</span>
+    </button>
+  </div>
+
+  <!-- MODAL FOR CONSULTING MINIMIZED SQUADS AT ANY POINT IN THE GAME -->
+  <div id="rooster-modal" class="modal-backdrop hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <img id="modal-coach-avatar" src="/assets/ui/human_coach.png" alt="Coach" class="modal-emblem-img" onerror="this.style.display='none'" />
+          <img id="modal-rooster-emblem" src="/assets/emblems/squad_a.png" alt="Emblema" class="modal-emblem-img" />
+          <div>
+            <span id="modal-owner-badge" class="stage-pill">CONSULTA DE ELENCO</span>
+            <h3 id="modal-rooster-name">Time Squad</h3>
+          </div>
+        </div>
+        <div class="modal-header-actions">
+          <div class="view-mode-toggle">
+            <button id="modal-btn-lineup" class="mode-btn hidden">⚽ Escalação Titular (12 & Campo)</button>
+            <button id="modal-btn-cards" class="mode-btn active">🔲 Cartas (24)</button>
+            <button id="modal-btn-table" class="mode-btn">📋 Tabela (24)</button>
+          </div>
+          <button id="modal-close-btn" class="btn-close">✕ Fechar</button>
+        </div>
+      </div>
+      <div id="modal-rooster-content" class="modal-rooster-content"></div>
+    </div>
+  </div>
+
+  <!-- SECOND-HALF CLIMAX & BIG REVEAL OVERLAY ANIMATION (STAGE 7 -> STAGE 8) -->
+  <div id="climax-reveal-overlay" class="climax-reveal-overlay hidden">
+    <div class="climax-reveal-card" id="climax-reveal-card">
+      <!-- Populated dynamically by playClimaxRevealAnimation() in app.js -->
+    </div>
+  </div>
+
+  <!-- MODAL FOR INTERACTIVE TURN-BY-TURN TUTORIAL (CARTOON STAGES & EXAMPLES) -->
+  <div id="tutorial-modal" class="modal-backdrop hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div>
+          <span class="stage-pill">MANUAL DO VIAJANTE TEMPORAL · PASSO A PASSO ILUSTRADO</span>
+          <h3>📖 Como Jogar Cartola Legends of Time (Tutorial Turn-by-Turn & Exemplos Práticos)</h3>
+        </div>
+        <button id="tutorial-modal-close-btn" class="btn-close">✕ Fechar</button>
+      </div>
+      <div id="tutorial-modal-body" class="art-gallery-body"></div>
+    </div>
+  </div>
+
+  <!-- MODAL FOR ENCYCLOPEDIA / CODEX (TIME FRAME 2014-2025, 3 POWER-UPS & 8 CRAZY RULES) -->
+  <div id="codex-modal" class="modal-backdrop hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div>
+          <span class="stage-pill">ENCICLOPÉDIA TEMPORAL · REGRAS, POWER-UPS & ERA 2014–2025</span>
+          <h3>📜 Guia Oficial: A Era 2014–2025, Os 3 Power-Ups de Intervalo & As 8 Regras Malucas</h3>
+        </div>
+        <button id="codex-modal-close-btn" class="btn-close">✕ Fechar</button>
+      </div>
+      <div id="codex-modal-body" class="art-gallery-body"></div>
+    </div>
+  </div>
+
+  <!-- MODAL FOR INSPECTING GENERATED ART ASSETS -->
+  <div id="art-gallery-modal" class="modal-backdrop hidden">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div>
+          <span class="stage-pill">ACERVO OFICIAL · CARTOLA LEGENDS OF TIME</span>
+          <h3>Galeria de Arte Temporal (Emblemas, Power-Ups, Regras, Treinadores & Cartoons)</h3>
+        </div>
+        <button id="art-modal-close-btn" class="btn-close">✕ Fechar</button>
+      </div>
+      <div id="art-gallery-body" class="art-gallery-body"></div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
