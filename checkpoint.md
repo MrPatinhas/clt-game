@@ -58,3 +58,16 @@
 - [x] **Scroll-Anchored Lineup & Substitutions:** Created `withScrollPreserved(".bench-players-drawer", ...)` in [app.js](file:///C:/Users/thiag/Documents/CLT/app/static/app.js) so clicking starters, bench players, or captain in Stage 6 and Stage 7 keeps the roster drawer and page scroll perfectly anchored.
 - [x] **Mobile Default View Mode (GRADE):** Set `appState.viewMode = window.innerWidth <= 768 ? "grid" : "3d"` so mobile visitors immediately see the 2-column Grade (Grid) layout while desktop continues defaulting to the 3D Carousel.
 
+---
+
+## 6. Phase 8: Viral WhatsApp Share Pop-up & Match Flow Polish (Complete)
+- [x] **Default Series Mode to Best of 3 (MD3):** Configured `series_mode="bo3"` and `target_wins=2` by default across [game_state.py](file:///C:/Users/thiag/Documents/CLT/app/engine/game_state.py), [main.py](file:///C:/Users/thiag/Documents/CLT/app/main.py), and [index.html](file:///C:/Users/thiag/Documents/CLT/app/static/index.html) for faster, punchier mobile sessions.
+- [x] **Default Theme to Light Cream Mode:** Set `body.light-mode` as default in [index.html](file:///C:/Users/thiag/Documents/CLT/app/static/index.html) and [app.js](file:///C:/Users/thiag/Documents/CLT/app/static/app.js), with user preference persistence via `localStorage`.
+- [x] **Sofascore-Style End-of-Series Share Pop-up (`#share-run-modal`):**
+  - **Centered CLT Logo:** Top-center brand crest with golden clockwork frame.
+  - **Match Score Timeline:** Sofascore-inspired match-by-match rows detailing Season, Round, Active Rule, scores, and winner highlight.
+  - **Human MVP Spotlight:** Highlights top-scoring human athlete with score, photo, and badge.
+  - **1-Tap WhatsApp Clipboard Copy:** Generates formatted WhatsApp scorecard with emojis, match-by-match breakdown, human MVP, and direct link to `https://clt-cartologia.up.railway.app/`.
+  - **Native Clipboard API + Fallback:** Resilient clipboard copying for iOS Safari, Chrome Android, and desktop browsers with visual feedback toast.
+
+

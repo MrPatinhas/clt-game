@@ -2558,6 +2558,237 @@ function renderReportTeamColumn(title, coachImg, rooster, reportData, totalScore
   `;
 }
 
+function openShareModal() {
+  const modal = document.getElementById("share-run-modal");
+  if (!modal) return;
+
+  const s8 = appState.stage8 || {};
+  const hRooster = appState.roosters[appState.humanRoosterIdx] || { name: "Seu Time Squad" };
+  const aRooster = appState.roosters[appState.aiRoosterIdx] || { name: "Time Squad IA" };
+  const humanWonSeries = appState.human_wins > appState.ai_wins;
+  const isBo3 = appState.target_wins === 2;
+
+  // Header Elements
+  const badgeEl = document.getElementById("share-series-badge");
+  const headEl = document.getElementById("share-series-headline");
+  const modePill = document.getElementById("share-timeline-mode");
+
+  if (badgeEl) {
+    badgeEl.textContent = `SÉRIE ENCERRADA · ${isBo3 ? "MELHOR DE 3 (MD3)" : "MELHOR DE 5 (MD5)"}`;
+  }
+  if (headEl) {
+    headEl.textContent = humanWonSeries ? "🏆 VITÓRIA NA SÉRIE TEMPORAL!" : "🤖 O ORÁCULO IA VENCEU A SÉRIE!";
+    headEl.style.color = humanWonSeries ? "var(--text-emerald)" : "var(--text-amber)";
+  }
+  if (modePill) {
+    modePill.textContent = isBo3 ? "MD3" : "MD5";
+  }
+
+  // Scoreboard
+  const hNameEl = document.getElementById("share-human-rooster-name");
+  const aNameEl = document.getElementById("share-ai-rooster-name");
+  const hWinsEl = document.getElementById("share-human-wins");
+  const aWinsEl = document.getElementById("share-ai-wins");
+
+  if (hNameEl) hNameEl.textContent = hRooster.name;
+  if (aNameEl) aNameEl.textContent = aRooster.name;
+  if (hWinsEl) hWinsEl.textContent = appState.human_wins;
+  if (aWinsEl) aWinsEl.textContent = appState.ai_wins;
+
+  // Matches Timeline
+  const matches = (appState.match_history && appState.match_history.length > 0)
+    ? appState.match_history
+    : [
+        {
+          match_number: s8.match_number || 1,
+          season: s8.season,
+          round: s8.round,
+          rule_name: s8.rule_name,
+          human_total: s8.human_total,
+          ai_total: s8.ai_total,
+          winner: s8.winner,
+          mvp: s8.mvp,
+        },
+      ];
+
+  const timelineContainer = document.getElementById("share-timeline-items");
+  if (timelineContainer) {
+    timelineContainer.innerHTML = matches
+      .map((m) => {
+        const hWon = m.winner === "human";
+        return `
+          <div class="timeline-match-row">
+            <div class="timeline-meta-col">
+              <span class="timeline-match-tag">Partida #${m.match_number}</span>
+              <span class="timeline-coord-tag">⏳ ${m.season} · 🧭 R#${m.round}</span>
+              <span class="timeline-rule-tag">🎩 ${m.rule_name || "Cartola"}</span>
+            </div>
+
+            <div class="timeline-sofascore-duel">
+              <div class="timeline-side human ${hWon ? "side-winner" : ""}">
+                <span class="timeline-team-name">${hRooster.name.split(" ")[0] || "Você"}</span>
+                <span class="timeline-score ${hWon ? "winner" : ""}">${(m.human_total || 0).toFixed(2)}</span>
+              </div>
+              <span class="timeline-duel-sep">-</span>
+              <div class="timeline-side ai ${!hWon ? "side-winner" : ""}">
+                <span class="timeline-score ${!hWon ? "winner" : ""}">${(m.ai_total || 0).toFixed(2)}</span>
+                <span class="timeline-team-name">${aRooster.name.split(" ")[0] || "IA"}</span>
+              </div>
+            </div>
+
+            <div class="timeline-result-badge ${hWon ? "human-win" : "ai-win"}">
+              ${hWon ? "🏆 Você Venceu" : "🤖 IA Venceu"}
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  // Human MVP
+  let bestHumanAthlete = null;
+  if (s8.human_report && s8.human_report.length) {
+    const sorted = [...s8.human_report].sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
+    bestHumanAthlete = sorted[0];
+  } else if (s8.mvp && s8.winner === "human") {
+    bestHumanAthlete = s8.mvp;
+  }
+
+  const mvpStrip = document.getElementById("share-mvp-strip");
+  if (mvpStrip) {
+    if (bestHumanAthlete) {
+      const scoreVal = bestHumanAthlete.eval ? bestHumanAthlete.eval.final_score : bestHumanAthlete.final_score || 0;
+      mvpStrip.innerHTML = `
+        <img src="${bestHumanAthlete.photo_url || DEFAULT_SILHOUETTE}" class="table-avatar" style="width:52px;height:52px;border:2px solid var(--clt-gold);border-radius:50%;" onerror="this.onerror=null;this.src='${DEFAULT_SILHOUETTE}';" />
+        <div style="flex:1;min-width:0;">
+          <span class="share-mvp-label">⭐ DESTAQUE DO SEU TIME (HUMAN MVP)</span>
+          <div style="font-family:'Cinzel',serif;font-size:1.05rem;font-weight:900;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${bestHumanAthlete.short_name} (${bestHumanAthlete.position_code}) ${bestHumanAthlete.is_captain ? "© 2x" : ""}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
+            Craque do seu elenco com pontuação decisiva na partida!
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.68rem;color:var(--text-muted);font-weight:700;">PONTOS</div>
+          <div class="share-mvp-score">${scoreVal.toFixed(2)} pts</div>
+        </div>
+      `;
+      mvpStrip.classList.remove("hidden");
+    } else {
+      mvpStrip.classList.add("hidden");
+    }
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.top = "0";
+  ta.style.left = "0";
+  ta.style.width = "2em";
+  ta.style.height = "2em";
+  ta.style.padding = "0";
+  ta.style.border = "none";
+  ta.style.outline = "none";
+  ta.style.boxShadow = "none";
+  ta.style.background = "transparent";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand("copy");
+  } catch (e) {
+    console.error("Fallback copy failed", e);
+  }
+  document.body.removeChild(ta);
+}
+
+function copySeriesResultToClipboard() {
+  const s8 = appState.stage8 || {};
+  const hRooster = appState.roosters[appState.humanRoosterIdx] || { name: "Seu Time Squad" };
+  const aRooster = appState.roosters[appState.aiRoosterIdx] || { name: "Time Squad IA" };
+  const humanWonSeries = appState.human_wins > appState.ai_wins;
+  const isBo3 = appState.target_wins === 2;
+
+  const matches = (appState.match_history && appState.match_history.length > 0)
+    ? appState.match_history
+    : [
+        {
+          match_number: s8.match_number || 1,
+          season: s8.season,
+          round: s8.round,
+          rule_name: s8.rule_name,
+          human_total: s8.human_total,
+          ai_total: s8.ai_total,
+          winner: s8.winner,
+          mvp: s8.mvp,
+        },
+      ];
+
+  let bestHumanAthlete = null;
+  if (s8.human_report && s8.human_report.length) {
+    const sorted = [...s8.human_report].sort((a, b) => (b.final_score || 0) - (a.final_score || 0));
+    bestHumanAthlete = sorted[0];
+  } else if (s8.mvp && s8.winner === "human") {
+    bestHumanAthlete = s8.mvp;
+  }
+
+  const matchLines = matches
+    .map((m) => {
+      const hWon = m.winner === "human";
+      const statusEmoji = hWon ? "✅ Vitória" : "❌ Derrota";
+      return `⚽ Jogo ${m.match_number} (${m.season} · R#${m.round} · ${m.rule_name || "Cartola"}):\n   🧑‍💼 ${(m.human_total || 0).toFixed(2)} pts  x  🤖 ${(m.ai_total || 0).toFixed(2)} pts (${statusEmoji})`;
+    })
+    .join("\n");
+
+  let mvpBlock = "";
+  if (bestHumanAthlete) {
+    const scoreVal = bestHumanAthlete.eval ? bestHumanAthlete.eval.final_score : bestHumanAthlete.final_score || 0;
+    mvpBlock = `\n⭐ *Craque do Time (Human MVP)*:\n🔥 ${bestHumanAthlete.short_name} (${bestHumanAthlete.position_code}) — ${scoreVal.toFixed(2)} pts\n`;
+  }
+
+  const seriesEmoji = humanWonSeries ? "🏆 CAMPEÃO DA SÉRIE!" : "🤖 O ORÁCULO IA VENCEU!";
+
+  const shareText = `🎩 *CARTOLA LEGENDS OF TIME* ⚽⏳
+🏆 *Resultado da Série (${isBo3 ? "Melhor de 3" : "Melhor de 5"})*:
+🧑‍💼 *${hRooster.name}* [${appState.human_wins}]  x  [${appState.ai_wins}] *${aRooster.name}* 🤖
+Status: ${seriesEmoji}
+
+⏱️ *Linha do Tempo das Partidas*:
+${matchLines}
+${mvpBlock}
+Desafie a máquina do tempo e monte seu esquadrão histórico:
+👉 https://clt-cartologia.up.railway.app/`;
+
+  const triggerVisualFeedback = () => {
+    const btn = document.getElementById("btn-share-whatsapp");
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span class="whatsapp-icon">✅</span> Copiado com Sucesso!`;
+      btn.style.background = "#059669";
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.style.background = "";
+      }, 2500);
+    }
+    showLineupDiagnosticToast("📋 Placar copiado com sucesso! Agora é só colar no WhatsApp.", true);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shareText).then(triggerVisualFeedback).catch(() => {
+      fallbackCopy(shareText);
+      triggerVisualFeedback();
+    });
+  } else {
+    fallbackCopy(shareText);
+    triggerVisualFeedback();
+  }
+}
+
 function renderStage8() {
   const container = document.getElementById("stage8-container");
   if (!container || !appState.stage8 || appState.stage8.human_total === undefined) return;
@@ -2580,11 +2811,21 @@ function renderStage8() {
         <p style="font-size:0.95rem;color:var(--text-light);margin-bottom:14px;">
           Placar Final da Série: <strong>Você ${appState.human_wins} x ${appState.ai_wins} IA</strong>
         </p>
-        <button id="btn-s8-new-run" class="btn-chrono" style="font-size:1rem;padding:12px 28px;">
-          🔄 Iniciar Nova Série Temporal (Sortear 7 Novos Time Squads)
-        </button>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button id="btn-open-share-modal" class="btn-whatsapp-share" style="font-size:0.95rem;padding:12px 24px;">
+            <span class="whatsapp-icon">💬</span> Compartilhar Placar no WhatsApp
+          </button>
+          <button id="btn-s8-new-run" class="btn-chrono" style="font-size:1rem;padding:12px 28px;">
+            🔄 Iniciar Nova Série Temporal (Sortear 7 Novos Time Squads)
+          </button>
+        </div>
       </div>
     `;
+
+    // Auto open Sofascore share modal after a short delay so the user sees the celebration
+    setTimeout(() => {
+      openShareModal();
+    }, 450);
   } else {
     nextActionHTML = `
       <div style="display:flex;justify-content:center;margin-bottom:22px;">
@@ -2663,6 +2904,13 @@ function renderStage8() {
       ${renderReportTeamColumn("🤖 TIME TITULAR DA IA", "/assets/ui/robot_coach.png", aRooster, s8.ai_report, s8.ai_total, s8.ai_formation)}
     </div>
   `;
+
+  const openShareBtn = document.getElementById("btn-open-share-modal");
+  if (openShareBtn) {
+    openShareBtn.addEventListener("click", () => {
+      openShareModal();
+    });
+  }
 
   const nextMatchBtn = document.getElementById("btn-s8-next-match");
   if (nextMatchBtn) {
@@ -3499,10 +3747,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     if (e.key === "Escape") {
-      document.getElementById("rooster-modal").classList.add("hidden");
-      document.getElementById("tutorial-modal").classList.add("hidden");
-      document.getElementById("codex-modal").classList.add("hidden");
-      document.getElementById("art-gallery-modal").classList.add("hidden");
+      document.getElementById("rooster-modal")?.classList.add("hidden");
+      document.getElementById("tutorial-modal")?.classList.add("hidden");
+      document.getElementById("codex-modal")?.classList.add("hidden");
+      document.getElementById("art-gallery-modal")?.classList.add("hidden");
+      document.getElementById("share-run-modal")?.classList.add("hidden");
     }
   });
 
@@ -3520,7 +3769,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-view-grid").addEventListener("click", () => setViewMode("grid"));
   document.getElementById("btn-view-table").addEventListener("click", () => setViewMode("table"));
 
-  // Theme Toggle (Dark Mode vs Light Cream Mode)
+  // Theme Toggle (Dark Mode vs Light Cream Mode · Light Mode is Default)
   const themeBtn = document.getElementById("btn-theme-toggle");
   const applyTheme = (isLight) => {
     document.body.classList.toggle("light-mode", isLight);
@@ -3534,10 +3783,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   try {
     const savedTheme = localStorage.getItem("clt_theme_mode");
-    if (savedTheme === "light") {
-      applyTheme(true);
+    if (savedTheme === "dark") {
+      applyTheme(false);
+    } else {
+      applyTheme(true); // Default to Light Mode
     }
-  } catch (_) {}
+  } catch (_) {
+    applyTheme(true);
+  }
 
   if (themeBtn) {
     themeBtn.addEventListener("click", () => {
@@ -3615,5 +3868,35 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("art-gallery-modal").classList.add("hidden");
     }
   });
+
+  // End-of-Series Share Modal Listeners
+  const btnShareWhatsapp = document.getElementById("btn-share-whatsapp");
+  if (btnShareWhatsapp) {
+    btnShareWhatsapp.addEventListener("click", copySeriesResultToClipboard);
+  }
+
+  const btnSharePlayAgain = document.getElementById("btn-share-play-again");
+  if (btnSharePlayAgain) {
+    btnSharePlayAgain.addEventListener("click", () => {
+      document.getElementById("share-run-modal")?.classList.add("hidden");
+      rerollNewRun();
+    });
+  }
+
+  const btnShareClose = document.getElementById("btn-share-close");
+  if (btnShareClose) {
+    btnShareClose.addEventListener("click", () => {
+      document.getElementById("share-run-modal")?.classList.add("hidden");
+    });
+  }
+
+  const shareModal = document.getElementById("share-run-modal");
+  if (shareModal) {
+    shareModal.addEventListener("click", (e) => {
+      if (e.target.id === "share-run-modal") {
+        shareModal.classList.add("hidden");
+      }
+    });
+  }
 });
 

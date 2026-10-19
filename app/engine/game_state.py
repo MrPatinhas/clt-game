@@ -151,8 +151,8 @@ class CLTGameEngine:
         self.state = {
             "run_id": self.run_id,
             "stage": 1,
-            "series_mode": "bo5",
-            "target_wins": 3,
+            "series_mode": "bo3",
+            "target_wins": 2,
             "ai_difficulty": "veteran",
             "match_number": 1,
             "human_wins": 0,
@@ -178,7 +178,7 @@ class CLTGameEngine:
     # =========================================================================
     # STAGE 1 -> STAGE 2: SELECT TIME SQUAD & INITIALIZE PARAMETERS
     # =========================================================================
-    def select_rooster(self, rooster_index: int, ai_difficulty: str = "veteran", series_mode: str = "bo5") -> Dict[str, Any]:
+    def select_rooster(self, rooster_index: int, ai_difficulty: str = "veteran", series_mode: str = "bo3") -> Dict[str, Any]:
         if self.state.get("human_rooster_index") is not None:
             raise ValueError("Seu Time Squad já está travado nesta série! Clique em 'Resetar Série' para iniciar uma nova run.")
         roosters = self.state["roosters"]
@@ -186,7 +186,7 @@ class CLTGameEngine:
         self.state["human_rooster_index"] = r_idx
         self.state["ai_difficulty"] = ai_difficulty
         self.state["series_mode"] = series_mode
-        self.state["target_wins"] = 3 if series_mode == "bo5" else 2
+        self.state["target_wins"] = 2 if series_mode == "bo3" else 3
 
         avail = [i for i in range(len(roosters)) if i != r_idx]
         non_rep = [
@@ -849,6 +849,7 @@ class CLTGameEngine:
             "human_total": h_total,
             "ai_total": a_total,
             "winner": winner,
+            "mvp": mvp,
         })
         return self.state
 

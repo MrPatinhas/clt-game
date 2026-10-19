@@ -174,7 +174,7 @@ class CLTRequestHandler(BaseHTTPRequestHandler):
                     engine.select_rooster(
                         rooster_index=int(body.get("rooster_index", 0)),
                         ai_difficulty=body.get("ai_difficulty", "veteran"),
-                        series_mode=body.get("series_mode", "bo5"),
+                        series_mode=body.get("series_mode", "bo3"),
                     ),
                     session_id=session_id,
                     is_new=is_new,

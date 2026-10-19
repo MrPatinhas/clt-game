@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
-<body>
+<body class="light-mode">
   <!-- TOP NAVIGATION & CHRONO CONTROLS -->
   <header class="topbar">
     <div class="brand">
@@ -36,8 +36,8 @@
       <div class="control-group">
         <label for="series-mode">Série Temporal</label>
         <select id="series-mode">
-          <option value="bo5" selected>Melhor de 5 (3 Vitórias)</option>
-          <option value="bo3">Melhor de 3 (2 Vitórias)</option>
+          <option value="bo3" selected>Melhor de 3 (2 Vitórias)</option>
+          <option value="bo5">Melhor de 5 (3 Vitórias)</option>
         </select>
       </div>
 
@@ -54,7 +54,7 @@
       </button>
 
       <button id="btn-theme-toggle" class="btn-gallery" title="Alternar entre Modo Escuro (Noturno) e Modo Claro (Pergaminho Creme)">
-        ☀️ Modo Claro
+        🌙 Modo Escuro
       </button>
 
       <button id="btn-reroll-run" class="btn-chrono" title="Abre uma fenda temporal e sorteia 7 novos Time Squads do pool de ~300 lendas">
@@ -459,6 +459,68 @@
         <button id="art-modal-close-btn" class="btn-close">✕ Fechar</button>
       </div>
       <div id="art-gallery-body" class="art-gallery-body"></div>
+    </div>
+  </div>
+
+  <!-- 5. END-OF-SERIES SHARE MODAL (SOFASCORE-STYLE TIMELINE & WHATSAPP COPY) -->
+  <div id="share-run-modal" class="modal-backdrop hidden">
+    <div class="modal-window share-modal-window">
+      <div class="share-modal-header">
+        <div class="share-modal-logo-frame">
+          <img src="/assets/ui/clt_logo.png" alt="Cartola Legends of Time Logo" class="share-modal-logo-img" />
+        </div>
+        <span id="share-series-badge" class="stage-pill">SÉRIE ENCERRADA · MELHOR DE 3</span>
+        <h2 id="share-series-headline" class="share-series-headline">🏆 VITÓRIA NA SÉRIE TEMPORAL!</h2>
+        <div id="share-series-scoreboard" class="share-series-scoreboard">
+          <div class="share-score-team">
+            <img src="/assets/ui/human_coach.png" class="share-coach-avatar" alt="Coach Humano" />
+            <div class="share-team-text">
+              <span class="share-team-label">VOCÊ</span>
+              <span id="share-human-rooster-name" class="share-rooster-name">Time Squad</span>
+            </div>
+            <span id="share-human-wins" class="share-wins-val">2</span>
+          </div>
+          <span class="share-score-x">VS</span>
+          <div class="share-score-team ai-side">
+            <span id="share-ai-wins" class="share-wins-val">1</span>
+            <div class="share-team-text right-align">
+              <span class="share-team-label">ORÁCULO IA</span>
+              <span id="share-ai-rooster-name" class="share-rooster-name">Time Squad</span>
+            </div>
+            <img src="/assets/ui/robot_coach.png" class="share-coach-avatar" alt="Coach IA" />
+          </div>
+        </div>
+      </div>
+
+      <div class="share-modal-body">
+        <div class="sofascore-timeline-card">
+          <div class="timeline-card-header">
+            <span>⏱️ LINHA DO TEMPO DAS PARTIDAS</span>
+            <span id="share-timeline-mode" class="timeline-badge-pill">MD3</span>
+          </div>
+          <div id="share-timeline-items" class="timeline-items-flow">
+            <!-- Dynamic Sofascore match timeline items injected via JS -->
+          </div>
+        </div>
+
+        <div id="share-mvp-strip" class="share-mvp-strip">
+          <!-- Dynamic Human MVP card injected via JS -->
+        </div>
+      </div>
+
+      <div class="share-modal-footer">
+        <button id="btn-share-whatsapp" class="btn-whatsapp-share" title="Copiar texto formatado com emojis para enviar no WhatsApp">
+          <span class="whatsapp-icon">💬</span> Copiar Resultado para o WhatsApp
+        </button>
+        <div class="share-secondary-actions">
+          <button id="btn-share-play-again" class="btn-chrono">
+            🔄 Jogar Novamente
+          </button>
+          <button id="btn-share-close" class="btn-gallery">
+            ✕ Ver Relatório da Partida
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
