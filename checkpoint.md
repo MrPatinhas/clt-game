@@ -30,5 +30,9 @@
 
 ---
 
-## 3. Next Domain: Public Deployment & Tester Feedback
-- Awaiting user sign-off on the **Phase 6 PRD** (Session isolation architecture + hosting platform selection).
+## 3. Deployment Packaging & Multi-Tenancy (Phase 6 Progress)
+- [x] **Step 6.1 — Relative Path Portability:** Replaced Windows hardcoded paths with dynamic `Path(__file__).resolve().parent...` in [main.py](file:///C:/Users/thiag/Documents/CLT/app/main.py), [game_state.py](file:///C:/Users/thiag/Documents/CLT/app/engine/game_state.py), and [data_prep.py](file:///C:/Users/thiag/Documents/CLT/app/engine/data_prep.py).
+- [x] **Step 6.2 — Multi-Tenant Session Isolation:** Implemented thread-safe `SessionManager` in [main.py](file:///C:/Users/thiag/Documents/CLT/app/main.py) with `clt_session_id` cookies, dynamic `$PORT` binding (`0.0.0.0`), and background TTL cleaner. Verified 100% isolated games via [qa_verify_sessions.py](file:///C:/Users/thiag/Documents/CLT/pipeline/qa_verify_sessions.py).
+- [x] **Step 6.3 — Production Packaging:** Created [requirements.txt](file:///C:/Users/thiag/Documents/CLT/requirements.txt), [.gitignore](file:///C:/Users/thiag/Documents/CLT/.gitignore), [Dockerfile](file:///C:/Users/thiag/Documents/CLT/Dockerfile), [railway.json](file:///C:/Users/thiag/Documents/CLT/railway.json), and [Procfile](file:///C:/Users/thiag/Documents/CLT/Procfile).
+- [x] **Step 6.4 — GitHub Repository Pushed:** Published initial release `75e78fe` to [github.com/MrPatinhas/clt-game](https://github.com/MrPatinhas/clt-game).
+- [ ] **Step 6.5 — Railway Deployment & Public Domain:** Connect GitHub repo to Railway.app and verify public HTTPS URL.
