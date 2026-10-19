@@ -62,7 +62,7 @@ let appState = {
   activeRoosterIdx: 0,
   activePlayerIdx: 0,
   posFilter: "ALL",
-  viewMode: "3d", // "3d" | "grid" | "table"
+  viewMode: typeof window !== "undefined" && window.innerWidth <= 768 ? "grid" : "3d", // "3d" | "grid" | "table"
   modalRoosterIdx: null,
   modalViewMode: "cards",
   humanRoosterIdx: null,
@@ -663,6 +663,13 @@ function renderPlayerShowcase() {
   wrapper3D.classList.add("hidden");
   wrapperGrid.classList.add("hidden");
   wrapperTable.classList.add("hidden");
+
+  const btn3D = document.getElementById("btn-view-3d");
+  const btnGrid = document.getElementById("btn-view-grid");
+  const btnTable = document.getElementById("btn-view-table");
+  if (btn3D) btn3D.classList.toggle("active", appState.viewMode === "3d");
+  if (btnGrid) btnGrid.classList.toggle("active", appState.viewMode === "grid");
+  if (btnTable) btnTable.classList.toggle("active", appState.viewMode === "table");
 
   if (appState.viewMode === "3d") {
     wrapper3D.classList.remove("hidden");
@@ -1755,6 +1762,20 @@ function togglePlayerInLineup(squad, formation, starterIds, captainId, clickedPi
   return sanitizeLineupState(squad, nextStarters, nextCap);
 }
 
+function withScrollPreserved(selector, action) {
+  const el = document.querySelector(selector);
+  const internalScroll = el ? el.scrollTop : 0;
+  const pageY = window.scrollY;
+
+  action();
+
+  const newEl = document.querySelector(selector);
+  if (newEl && internalScroll) {
+    newEl.scrollTop = internalScroll;
+  }
+  window.scrollTo({ top: pageY, behavior: "instant" });
+}
+
 // ============================================================================
 // STAGE 6: TACTICAL FORMATION, INTERACTIVE PITCH & CAPTAIN (2x)
 // ============================================================================
@@ -1866,7 +1887,9 @@ function renderStage6() {
       appState.stage6Formation = auto.formation;
       appState.stage6Starters = auto.starter_ids;
       appState.stage6CaptainId = auto.captain_id;
-      renderStage6();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage6();
+      });
       const st = evaluateLineupStatus(squad, appState.stage6Formation, appState.stage6Starters, appState.stage6CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -1876,7 +1899,9 @@ function renderStage6() {
     const auto = autoBuildBestLineup(squad, appState.stage6Formation);
     appState.stage6Starters = auto.starter_ids;
     appState.stage6CaptainId = auto.captain_id;
-    renderStage6();
+    withScrollPreserved(".bench-players-drawer", () => {
+      renderStage6();
+    });
     const st = evaluateLineupStatus(squad, appState.stage6Formation, appState.stage6Starters, appState.stage6CaptainId);
     showLineupDiagnosticToast(st.toastMessage, st.isValid);
   });
@@ -1884,7 +1909,9 @@ function renderStage6() {
   document.getElementById("btn-s6-clear").addEventListener("click", () => {
     appState.stage6Starters = [];
     appState.stage6CaptainId = null;
-    renderStage6();
+    withScrollPreserved(".bench-players-drawer", () => {
+      renderStage6();
+    });
     const st = evaluateLineupStatus(squad, appState.stage6Formation, appState.stage6Starters, appState.stage6CaptainId);
     showLineupDiagnosticToast(st.toastMessage, st.isValid);
   });
@@ -1901,7 +1928,9 @@ function renderStage6() {
       );
       appState.stage6Starters = res.starterIds;
       appState.stage6CaptainId = res.captainId;
-      renderStage6();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage6();
+      });
       const st = evaluateLineupStatus(squad, appState.stage6Formation, appState.stage6Starters, appState.stage6CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -1910,7 +1939,9 @@ function renderStage6() {
   container.querySelectorAll("[data-cap-pid]").forEach((btn) => {
     btn.addEventListener("click", () => {
       appState.stage6CaptainId = parseInt(btn.getAttribute("data-cap-pid"), 10);
-      renderStage6();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage6();
+      });
       const st = evaluateLineupStatus(squad, appState.stage6Formation, appState.stage6Starters, appState.stage6CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -1925,7 +1956,9 @@ function renderStage6() {
         appState.stage6Starters = appState.stage6Starters.filter((id) => id !== pid);
         appState.stage6CaptainId = appState.stage6Starters[0] || null;
       }
-      renderStage6();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage6();
+      });
       const st = evaluateLineupStatus(squad, appState.stage6Formation, appState.stage6Starters, appState.stage6CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -2325,7 +2358,9 @@ function renderStage7() {
   container.querySelectorAll("[data-s7-fmt]").forEach((btn) => {
     btn.addEventListener("click", () => {
       appState.stage7Formation = btn.getAttribute("data-s7-fmt");
-      renderStage7();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage7();
+      });
       const st = evaluateLineupStatus(squad, appState.stage7Formation, appState.stage7Starters, appState.stage7CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -2337,7 +2372,9 @@ function renderStage7() {
       appState.stage7Formation = s6.human_lineup.formation;
       appState.stage7Starters = [...s6.human_lineup.starter_ids];
       appState.stage7CaptainId = s6.human_lineup.captain_id;
-      renderStage7();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage7();
+      });
       const st = evaluateLineupStatus(squad, appState.stage7Formation, appState.stage7Starters, appState.stage7CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -2355,7 +2392,9 @@ function renderStage7() {
       );
       appState.stage7Starters = res.starterIds;
       appState.stage7CaptainId = res.captainId;
-      renderStage7();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage7();
+      });
       const st = evaluateLineupStatus(squad, appState.stage7Formation, appState.stage7Starters, appState.stage7CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -2363,8 +2402,10 @@ function renderStage7() {
 
   container.querySelectorAll("[data-cap-pid]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      appState.stage7CaptainId = parseInt(btn.getAttribute("data-cap-pid"), 10);
-      renderStage7();
+      appState.stage6CaptainId = parseInt(btn.getAttribute("data-cap-pid"), 10);
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage7();
+      });
       const st = evaluateLineupStatus(squad, appState.stage7Formation, appState.stage7Starters, appState.stage7CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });
@@ -2379,7 +2420,9 @@ function renderStage7() {
         appState.stage7Starters = appState.stage7Starters.filter((id) => id !== pid);
         appState.stage7CaptainId = appState.stage7Starters[0] || null;
       }
-      renderStage7();
+      withScrollPreserved(".bench-players-drawer", () => {
+        renderStage7();
+      });
       const st = evaluateLineupStatus(squad, appState.stage7Formation, appState.stage7Starters, appState.stage7CaptainId);
       showLineupDiagnosticToast(st.toastMessage, st.isValid);
     });

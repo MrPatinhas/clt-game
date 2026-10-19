@@ -50,3 +50,11 @@
   - Tactical mini-pitch auto-scaling with docked bench.
   - Bottom-sheet pattern for consultation and tutorial modals.
 - [x] **Touch Gestures (JS):** Native touch-swipe navigation on mobile for 3D carousels in [app.js](file:///C:/Users/thiag/Documents/CLT/app/static/app.js).
+
+---
+
+## 5. Phase 7.1: Mobile Ergonomic Polish & Substitution QoL (Complete)
+- [x] **Compact Mobile Font Scale:** Applied uniform root scaling (`html { font-size: 14px; }` on $\le 768\text{px}$, `13px` on $\le 480\text{px}$) with tighter container padding, eliminating overflows and minimizing scrolling.
+- [x] **Scroll-Anchored Lineup & Substitutions:** Created `withScrollPreserved(".bench-players-drawer", ...)` in [app.js](file:///C:/Users/thiag/Documents/CLT/app/static/app.js) so clicking starters, bench players, or captain in Stage 6 and Stage 7 keeps the roster drawer and page scroll perfectly anchored.
+- [x] **Mobile Default View Mode (GRADE):** Set `appState.viewMode = window.innerWidth <= 768 ? "grid" : "3d"` so mobile visitors immediately see the 2-column Grade (Grid) layout while desktop continues defaulting to the 3D Carousel.
+
