@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css?v=10.1" />
 </head>
 <body class="light-mode">
   <!-- TOP NAVIGATION & CHRONO CONTROLS -->
@@ -171,80 +171,96 @@
         </p>
       </section>
 
-      <!-- 1. 3D PERSPECTIVE SQUAD DECK CAROUSEL -->
-      <section class="rooster-carousel-section" id="rooster-section-box">
-        <div class="section-bar">
-          <div class="section-title">
-            <span class="step-num">1</span>
-            <span>Cápsulas dos 7 Time Squads</span>
-            <span class="hint-pill">Setas <kbd>↑</kbd> <kbd>↓</kbd> ou clique nos Squads em ângulo</span>
-          </div>
-          <div class="carousel-nav-btns">
-            <button id="rooster-prev" class="nav-arrow-btn" aria-label="Squad Anterior">◀</button>
-            <span id="rooster-counter" class="mono-counter">1 / 7</span>
-            <button id="rooster-next" class="nav-arrow-btn" aria-label="Próximo Squad">▶</button>
-          </div>
-        </div>
+      <!-- STAGE 1 MODE SELECTOR: TIME SQUADS (7) VS DRAFT TEMPORAL -->
+      <div class="stage1-mode-bar">
+        <button id="btn-mode-squads" class="stage1-mode-btn active" title="Escolha entre os 7 Time Squads temáticos prontos">
+          <span class="mode-icon">🎠</span> Esquadrões Prontos (7 Squads)
+        </button>
+        <button id="btn-mode-draft" class="stage1-mode-btn" title="Monte seu próprio time draftando 24 atletas posição por posição">
+          <span class="mode-icon">🔲</span> Modo Draft Temporal (Monte seu Elenco)
+        </button>
+      </div>
 
-        <div id="temporal-vortex-overlay" class="temporal-vortex-overlay hidden">
-          <div class="vortex-core">
-            <div class="vortex-ring ring-outer"></div>
-            <div class="vortex-ring ring-middle"></div>
-            <div class="vortex-ring ring-inner"></div>
-            <img src="/assets/ui/clt_logo.png" alt="Vórtice Temporal" class="vortex-logo-spin" />
-          </div>
-          <div class="vortex-caption">
-            <div class="vortex-title">RECALIBRANDO LINHA DO TEMPO (2014–2025)...</div>
-            <div class="vortex-sub" id="vortex-status-text">Sorteando 168 Lendas entre 39 Clubes da Série A</div>
-          </div>
-        </div>
-
-        <div class="rooster-stage-3d" id="rooster-carousel-track"></div>
-      </section>
-
-      <!-- 2. PLAYER SHOWCASE (3D / GRID / 24-ROW TABLE) -->
-      <section class="player-showcase-section">
-        <div class="section-bar">
-          <div class="section-title">
-            <span class="step-num">2</span>
-            <div class="active-squad-header-inline">
-              <img id="active-rooster-emblem-mini" src="/assets/emblems/squad_a.png" alt="Emblema" class="inline-emblem-img" />
-              <span id="active-rooster-title">Time Squad A — Cartas dos Atletas</span>
+      <!-- MODE A: TIME SQUADS (7) -->
+      <div id="stage1-squads-container">
+        <!-- 1. 3D PERSPECTIVE SQUAD DECK CAROUSEL -->
+        <section class="rooster-carousel-section" id="rooster-section-box">
+          <div class="section-bar">
+            <div class="section-title">
+              <span class="step-num">1</span>
+              <span>Cápsulas dos 7 Time Squads</span>
+              <span class="hint-pill">Setas <kbd>↑</kbd> <kbd>↓</kbd> ou clique nos Squads em ângulo</span>
             </div>
-            <span class="hint-pill">Setas <kbd>←</kbd> <kbd>→</kbd> para girar cartas</span>
-          </div>
-
-          <div class="player-toolbar">
-            <div class="pos-filter-group" id="pos-filter-tabs">
-              <button class="pos-tab active" data-pos="ALL">Todos (24)</button>
-              <button class="pos-tab" data-pos="GOL">GOL (2)</button>
-              <button class="pos-tab" data-pos="ZAG">ZAG (4)</button>
-              <button class="pos-tab" data-pos="LAT">LAT (4)</button>
-              <button class="pos-tab" data-pos="MEI">MEI (8)</button>
-              <button class="pos-tab" data-pos="ATA">ATA (5)</button>
-              <button class="pos-tab" data-pos="TEC">TEC (1)</button>
-            </div>
-
-            <div class="view-mode-toggle">
-              <button id="btn-view-3d" class="mode-btn active">🎠 Carrossel 3D</button>
-              <button id="btn-view-grid" class="mode-btn">🔲 Grade (24)</button>
-              <button id="btn-view-table" class="mode-btn">📋 Tabela por Posição (24)</button>
+            <div class="carousel-nav-btns">
+              <button id="rooster-prev" class="nav-arrow-btn" aria-label="Squad Anterior">◀</button>
+              <span id="rooster-counter" class="mono-counter">1 / 7</span>
+              <button id="rooster-next" class="nav-arrow-btn" aria-label="Próximo Squad">▶</button>
             </div>
           </div>
-        </div>
 
-        <div id="player-3d-wrapper" class="player-3d-wrapper">
-          <button id="player-prev" class="player-side-nav left" aria-label="Atleta Anterior">‹</button>
-          <div class="player-stage-3d" id="player-carousel-track"></div>
-          <button id="player-next" class="player-side-nav right" aria-label="Próximo Atleta">›</button>
-          <div class="player-carousel-footer">
-            <span id="player-counter" class="mono-counter">Carta 1 / 24</span>
+          <div id="temporal-vortex-overlay" class="temporal-vortex-overlay hidden">
+            <div class="vortex-core">
+              <div class="vortex-ring ring-outer"></div>
+              <div class="vortex-ring ring-middle"></div>
+              <div class="vortex-ring ring-inner"></div>
+              <img src="/assets/ui/clt_logo.png" alt="Vórtice Temporal" class="vortex-logo-spin" />
+            </div>
+            <div class="vortex-caption">
+              <div class="vortex-title">RECALIBRANDO LINHA DO TEMPO (2014–2025)...</div>
+              <div class="vortex-sub" id="vortex-status-text">Sorteando 168 Lendas entre 39 Clubes da Série A</div>
+            </div>
           </div>
-        </div>
 
-        <div id="player-grid-wrapper" class="player-grid-wrapper hidden"></div>
-        <div id="player-table-wrapper" class="player-table-wrapper hidden"></div>
-      </section>
+          <div class="rooster-stage-3d" id="rooster-carousel-track"></div>
+        </section>
+
+        <!-- 2. PLAYER SHOWCASE (3D / GRID / 24-ROW TABLE) -->
+        <section class="player-showcase-section">
+          <div class="section-bar">
+            <div class="section-title">
+              <span class="step-num">2</span>
+              <div class="active-squad-header-inline">
+                <img id="active-rooster-emblem-mini" src="/assets/emblems/squad_a.png" alt="Emblema" class="inline-emblem-img" />
+                <span id="active-rooster-title">Time Squad A — Cartas dos Atletas</span>
+              </div>
+              <span class="hint-pill">Setas <kbd>←</kbd> <kbd>→</kbd> para girar cartas</span>
+            </div>
+
+            <div class="player-toolbar">
+              <div class="pos-filter-group" id="pos-filter-tabs">
+                <button class="pos-tab active" data-pos="ALL">Todos (24)</button>
+                <button class="pos-tab" data-pos="GOL">GOL (2)</button>
+                <button class="pos-tab" data-pos="ZAG">ZAG (4)</button>
+                <button class="pos-tab" data-pos="LAT">LAT (4)</button>
+                <button class="pos-tab" data-pos="MEI">MEI (8)</button>
+                <button class="pos-tab" data-pos="ATA">ATA (5)</button>
+                <button class="pos-tab" data-pos="TEC">TEC (1)</button>
+              </div>
+
+              <div class="view-mode-toggle">
+                <button id="btn-view-3d" class="mode-btn active">🎠 Carrossel 3D</button>
+                <button id="btn-view-grid" class="mode-btn">🔲 Grade (24)</button>
+                <button id="btn-view-table" class="mode-btn">📋 Tabela por Posição (24)</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="player-3d-wrapper" class="player-3d-wrapper">
+            <button id="player-prev" class="player-side-nav left" aria-label="Atleta Anterior">‹</button>
+            <div class="player-stage-3d" id="player-carousel-track"></div>
+            <button id="player-next" class="player-side-nav right" aria-label="Próximo Atleta">›</button>
+            <div class="player-carousel-footer">
+              <span id="player-counter" class="mono-counter">Carta 1 / 24</span>
+            </div>
+          </div>
+
+          <div id="player-grid-wrapper" class="player-grid-wrapper hidden"></div>
+          <div id="player-table-wrapper" class="player-table-wrapper hidden"></div>
+        </section>
+      </div>
+
+      <!-- MODE B: TEMPORAL DRAFT (24 PICKS) -->
+      <div id="stage1-draft-container" class="stage1-draft-container hidden"></div>
     </div>
 
     <!-- ================================================================== -->
@@ -539,6 +555,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=10.1"></script>
 </body>
 </html>

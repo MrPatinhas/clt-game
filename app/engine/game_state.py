@@ -6,6 +6,7 @@ Manages the full lifecycle of a Best-of-5 / Best-of-3 series across Stages 1 to 
 
 import json
 import random
+import copy
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
@@ -224,6 +225,120 @@ class CLTGameEngine:
         ai_idx = random.choice(pool)
         self.state["ai_rooster_index"] = ai_idx
         self.previous_ai_rooster_ids.append(roosters[ai_idx]["rooster_id"])
+
+        self.prepare_stage_2()
+        return self.state
+
+    def submit_draft_rooster(
+        self,
+        drafted_player_ids: List[int],
+        squad_name: str,
+        emblem_url: str,
+        ai_difficulty: str = "veteran",
+        series_mode: str = "bo3",
+    ) -> Dict[str, Any]:
+        """
+        Builds the human squad from a 24-player interactive draft (2 GOL, 4 ZAG, 4 LAT, 8 MEI, 5 ATA, 1 TEC)
+        and guarantees the AI coach's Time Squad has zero overlapping players.
+        """
+        if self.state.get("human_rooster_index") is not None:
+            raise ValueError("Seu Time Squad já está travado nesta série! Clique em 'Nova Série' para iniciar uma nova run.")
+
+        if len(drafted_player_ids) != 24 or len(set(drafted_player_ids)) != 24:
+            raise ValueError(f"O Draft Temporal exige exatamente 24 atletas únicos! Recebido: {len(drafted_player_ids)}.")
+
+        # Validate positions quotas: 2 GOL, 4 ZAG, 4 LAT, 8 MEI, 5 ATA, 1 TEC
+        pos_quotas = {"GOL": 2, "ZAG": 4, "LAT": 4, "MEI": 8, "ATA": 5, "TEC": 1}
+        counts = {"GOL": 0, "ZAG": 0, "LAT": 0, "MEI": 0, "ATA": 0, "TEC": 0}
+        players = []
+        for pid in drafted_player_ids:
+            pid = int(pid)
+            if pid not in self.store.players_by_id:
+                raise ValueError(f"Atleta com ID {pid} não encontrado no banco de dados.")
+            p = self.store.players_by_id[pid].copy()
+            counts[p["position_code"]] = counts.get(p["position_code"], 0) + 1
+            players.append(p)
+
+        for pos, req in pos_quotas.items():
+            if counts.get(pos, 0) != req:
+                raise ValueError(f"O Draft exige exatamente {req} {pos}, mas foram selecionados {counts.get(pos, 0)}.")
+
+        # Build Human Drafted Rooster
+        avg_s = round(float(np.mean([p["avg_score"] for p in players])), 2)
+        avg_r = round(float(np.mean([p["rounds_played"] for p in players])), 1)
+        total_r = int(np.sum([p["rounds_played"] for p in players]))
+
+        human_rooster = {
+            "index": len(self.state["roosters"]),
+            "rooster_id": f"drafted_{self.run_id}",
+            "name": (squad_name or "Vórtice da Eternidade").strip(),
+            "tagline": "Esquadrão Montado no Draft Temporal",
+            "emblem": "Draft",
+            "emblem_url": emblem_url or "/assets/emblems/squad_a.png",
+            "accent_color": "#F2C249",
+            "secondary_color": "#F9A03F",
+            "is_drafted": True,
+            "summary": {
+                "player_count": 24,
+                "mean_player_avg_score": avg_s,
+                "mean_rounds_played": avg_r,
+                "total_historical_appearances": total_r,
+            },
+            "players": players,
+        }
+
+        # Select AI Rooster from existing roosters
+        roosters = self.state["roosters"]
+        avail_ai = list(range(len(roosters)))
+        non_rep = [
+            i for i in avail_ai
+            if roosters[i]["rooster_id"] not in self.previous_ai_rooster_ids[-2:]
+        ]
+        pool = non_rep if non_rep else avail_ai
+        ai_idx = random.choice(pool)
+        self.previous_ai_rooster_ids.append(roosters[ai_idx]["rooster_id"])
+
+        # Make sure AI does not share ANY player with Human Draft
+        drafted_set = set(drafted_player_ids)
+        ai_rooster = copy.deepcopy(roosters[ai_idx])
+
+        # Pool of undrafted players across all existing roosters
+        all_rooster_players = []
+        for r in roosters:
+            all_rooster_players.extend(r["players"])
+
+        ai_player_ids = {p["player_id"] for p in ai_rooster["players"]}
+        for idx_p, p in enumerate(ai_rooster["players"]):
+            if p["player_id"] in drafted_set:
+                pos = p["position_code"]
+                candidates = [
+                    cand for cand in all_rooster_players
+                    if cand["position_code"] == pos
+                    and cand["player_id"] not in drafted_set
+                    and cand["player_id"] not in ai_player_ids
+                ]
+                if not candidates:
+                    candidates = [
+                        cand for cand in self.store.players_by_id.values()
+                        if cand["position_code"] == pos
+                        and cand["player_id"] not in drafted_set
+                        and cand["player_id"] not in ai_player_ids
+                    ]
+                replacement = random.choice(candidates).copy()
+                ai_rooster["players"][idx_p] = replacement
+                ai_player_ids.add(replacement["player_id"])
+
+        self._recalc_rooster_summary(ai_rooster)
+        roosters[ai_idx] = ai_rooster
+
+        human_idx = len(roosters)
+        roosters.append(human_rooster)
+
+        self.state["human_rooster_index"] = human_idx
+        self.state["ai_rooster_index"] = ai_idx
+        self.state["ai_difficulty"] = ai_difficulty
+        self.state["series_mode"] = series_mode
+        self.state["target_wins"] = 2 if series_mode == "bo3" else 3
 
         self.prepare_stage_2()
         return self.state

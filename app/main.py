@@ -129,6 +129,7 @@ class CLTRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", mime_str)
         self.send_header("Content-Length", str(len(content)))
+        self.send_header("Cache-Control", "no-cache, must-revalidate")
         if is_new and session_id:
             self.send_header("Set-Cookie", f"clt_session_id={session_id}; Path=/; Max-Age=2592000; SameSite=Lax")
             self.send_header("X-Session-ID", session_id)
@@ -173,6 +174,19 @@ class CLTRequestHandler(BaseHTTPRequestHandler):
                 self._send_json(
                     engine.select_rooster(
                         rooster_index=int(body.get("rooster_index", 0)),
+                        ai_difficulty=body.get("ai_difficulty", "veteran"),
+                        series_mode=body.get("series_mode", "bo3"),
+                    ),
+                    session_id=session_id,
+                    is_new=is_new,
+                )
+
+            elif parsed.path == "/api/stage1/draft-submit":
+                self._send_json(
+                    engine.submit_draft_rooster(
+                        drafted_player_ids=body.get("drafted_player_ids", []),
+                        squad_name=body.get("squad_name", "Vórtice da Eternidade"),
+                        emblem_url=body.get("emblem_url", "/assets/emblems/squad_a.png"),
                         ai_difficulty=body.get("ai_difficulty", "veteran"),
                         series_mode=body.get("series_mode", "bo3"),
                     ),

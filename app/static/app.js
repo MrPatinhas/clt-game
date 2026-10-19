@@ -68,6 +68,8 @@ let appState = {
   humanRoosterIdx: null,
   aiRoosterIdx: null,
   isAnimatingVortex: false,
+  stage1Mode: "squads", // "squads" | "draft"
+  draftState: null,
 
   // Stage 2 UI state
   stage2ParamType: "round", // "round" | "season"
@@ -717,6 +719,485 @@ function renderPlayerShowcase() {
   } else if (appState.viewMode === "table") {
     wrapperTable.classList.remove("hidden");
     wrapperTable.innerHTML = createPositionGroupedTableHTML(players);
+  }
+}
+
+// ============================================================================
+// STAGE 1: TIME SQUADS OR TEMPORAL DRAFT MODE
+// ============================================================================
+const DRAFT_NAMES = [
+  "Vórtice da Eternidade",
+  "Cronistas do Gramado",
+  "Guardiões do Século",
+  "Pêndulo Imortal",
+  "Relíquias Temporais",
+  "Viajantes da Bola",
+  "Linha do Tempo FC",
+  "Astrolábio Dourado",
+  "Ampulheta Lendária",
+  "Paradoxo da Série A",
+];
+
+const DRAFT_POS_QUOTAS = {
+  GOL: 2,
+  ZAG: 4,
+  LAT: 4,
+  MEI: 8,
+  ATA: 5,
+  TEC: 1,
+};
+
+const DRAFT_CANDIDATE_SIZES = {
+  GOL: 4,
+  ZAG: 8,
+  LAT: 8,
+  MEI: 16,
+  ATA: 10,
+  TEC: 2,
+};
+
+function renderStage1() {
+  const squadsBox = document.getElementById("stage1-squads-container");
+  const draftBox = document.getElementById("stage1-draft-container");
+  const btnSquads = document.getElementById("btn-mode-squads");
+  const btnDraft = document.getElementById("btn-mode-draft");
+
+  if (appState.stage1Mode === "draft") {
+    if (squadsBox) squadsBox.classList.add("hidden");
+    if (draftBox) draftBox.classList.remove("hidden");
+    if (btnSquads) btnSquads.classList.remove("active");
+    if (btnDraft) btnDraft.classList.add("active");
+    if (!appState.draftState) initDraftState();
+    renderDraftMode();
+  } else {
+    if (draftBox) draftBox.classList.add("hidden");
+    if (squadsBox) squadsBox.classList.remove("hidden");
+    if (btnDraft) btnDraft.classList.remove("active");
+    if (btnSquads) btnSquads.classList.add("active");
+    renderRoosterCarousel();
+    renderPlayerShowcase();
+  }
+}
+
+function initDraftState() {
+  const poolByPos = { GOL: [], ZAG: [], LAT: [], MEI: [], ATA: [], TEC: [] };
+  const seenIds = new Set();
+  (appState.roosters || []).forEach((r) => {
+    (r.players || []).forEach((p) => {
+      if (!seenIds.has(p.player_id) && poolByPos[p.position_code]) {
+        seenIds.add(p.player_id);
+        poolByPos[p.position_code].push(p);
+      }
+    });
+  });
+
+  const candidates = {};
+  const reservePool = {};
+
+  Object.keys(DRAFT_POS_QUOTAS).forEach((pos) => {
+    const list = [...(poolByPos[pos] || [])].sort(() => Math.random() - 0.5);
+    const targetSize = DRAFT_CANDIDATE_SIZES[pos] || 4;
+    candidates[pos] = list.slice(0, targetSize);
+    reservePool[pos] = list.slice(targetSize);
+  });
+
+  const initialName = DRAFT_NAMES[Math.floor(Math.random() * DRAFT_NAMES.length)];
+  appState.draftState = {
+    squadName: initialName,
+    emblemUrl: "/assets/emblems/squad_a.png",
+    currentPos: "GOL",
+    rerollsLeft: 3,
+    candidates: candidates,
+    reservePool: reservePool,
+    selections: { GOL: [], ZAG: [], LAT: [], MEI: [], ATA: [], TEC: [] },
+  };
+}
+
+function handleDraftReroll() {
+  if (!appState.draftState || appState.draftState.rerollsLeft <= 0) return;
+  const ds = appState.draftState;
+  const pos = ds.currentPos;
+  const currentSelected = ds.selections[pos] || [];
+  const selectedPids = new Set(currentSelected.map((p) => p.player_id));
+  const targetSize = DRAFT_CANDIDATE_SIZES[pos] || 4;
+  const neededFresh = targetSize - currentSelected.length;
+
+  let available = (ds.reservePool[pos] || []).filter((p) => !selectedPids.has(p.player_id));
+  if (available.length < neededFresh) {
+    const oldUnselected = (ds.candidates[pos] || []).filter((p) => !selectedPids.has(p.player_id));
+    available = [...available, ...oldUnselected].sort(() => Math.random() - 0.5);
+  } else {
+    available = available.sort(() => Math.random() - 0.5);
+  }
+
+  const fresh = available.slice(0, neededFresh);
+  ds.candidates[pos] = [...currentSelected, ...fresh].sort(() => Math.random() - 0.5);
+  ds.reservePool[pos] = available.slice(neededFresh);
+  ds.rerollsLeft -= 1;
+
+  showLineupDiagnosticToast(`🎲 Re-roll aplicado! ${ds.rerollsLeft} re-rolls restantes.`, true);
+  renderDraftMode();
+  updateDockPrimaryCta();
+}
+
+function renderDraftMode() {
+  const container = document.getElementById("stage1-draft-container");
+  if (!container) return;
+  if (!appState.draftState) initDraftState();
+
+  const ds = appState.draftState;
+  const currentPos = ds.currentPos;
+  const posQuota = DRAFT_POS_QUOTAS[currentPos];
+  const currentSelectedForPos = ds.selections[currentPos] || [];
+  const selectedPids = new Set(
+    Object.values(ds.selections)
+      .flat()
+      .map((p) => p.player_id)
+  );
+
+  const totalSelected = Object.values(ds.selections).reduce((sum, list) => sum + list.length, 0);
+  const isDraftComplete = totalSelected === 24;
+
+  const positionsList = ["GOL", "ZAG", "LAT", "MEI", "ATA", "TEC"];
+
+  // 1. Identity Bar HTML
+  const nameOptionsHTML = DRAFT_NAMES.map(
+    (n) => `<option value="${n}" ${n === ds.squadName ? "selected" : ""}>${n}</option>`
+  ).join("");
+
+  const emblemLetters = ["a", "b", "c", "d", "e", "f", "g"];
+  const emblemTokensHTML = emblemLetters
+    .map((letter) => {
+      const src = `/assets/emblems/squad_${letter}.png`;
+      const isActive = ds.emblemUrl === src;
+      return `
+        <button class="draft-emblem-token ${isActive ? "active" : ""}" data-draft-emblem="${src}" title="Emblema Squad ${letter.toUpperCase()}">
+          <img src="${src}" alt="Squad ${letter.toUpperCase()}" />
+        </button>
+      `;
+    })
+    .join("");
+
+  // 2. Positional Stepper HTML
+  const stepperHTML = positionsList
+    .map((pos) => {
+      const selCount = (ds.selections[pos] || []).length;
+      const req = DRAFT_POS_QUOTAS[pos];
+      const isComplete = selCount === req;
+      const isActive = pos === currentPos;
+      return `
+        <button class="draft-pos-btn ${isActive ? "active" : ""} ${isComplete ? "complete" : ""}" data-draft-pos="${pos}">
+          <span>${pos}</span>
+          <span class="draft-pos-pill">${selCount}/${req}${isComplete ? " ✅" : ""}</span>
+        </button>
+      `;
+    })
+    .join("");
+
+  // 3. Candidate Cards HTML (Blind Draft: no avg score!)
+  const candidates = ds.candidates[currentPos] || [];
+  const candidateCardsHTML = candidates
+    .map((p) => {
+      const isSelected = selectedPids.has(p.player_id);
+      const clubs = (p.top_teams || []).slice(0, 3);
+      const clubsHTML = clubs
+        .map(
+          (t) => `
+          <span class="draft-club-pill" title="${t.team_name} (${t.appearances} jogos)">
+            <img src="${t.badge_url || "/assets/clubs/CLB.png"}" class="mini-club-badge" onerror="this.src='/assets/clubs/CLB.png';" />
+            ${t.abbreviation || t.team_name} <small>(${t.appearances})</small>
+          </span>
+        `
+        )
+        .join("");
+
+      return `
+        <div class="draft-athlete-card ${isSelected ? "selected" : ""}" data-candidate-pid="${p.player_id}">
+          <div class="draft-card-top">
+            <img src="${p.photo_url || DEFAULT_SILHOUETTE}" class="draft-card-photo" onerror="this.src='${DEFAULT_SILHOUETTE}';" />
+            <div class="draft-card-meta">
+              <span class="draft-pos-tag">${p.position_code}</span>
+              <span class="draft-name" title="${p.short_name}">${p.short_name}</span>
+              <span class="draft-full-name" title="${p.full_name}">${p.full_name}</span>
+            </div>
+          </div>
+
+          <div class="draft-card-clubs">
+            ${clubsHTML || '<span style="font-size:0.65rem;color:var(--text-muted);">Série A</span>'}
+          </div>
+
+          <div class="draft-card-career">
+            <span class="draft-stat-item">⏳ ${p.first_season || 2014}–${p.last_season || 2025}</span>
+            <span class="draft-stat-item">🏟️ ${p.rounds_played} partidas</span>
+          </div>
+
+          <button class="draft-pick-btn ${isSelected ? "picked" : ""}">
+            ${isSelected ? "✅ Recrutado" : "+ Recrutar"}
+          </button>
+        </div>
+      `;
+    })
+    .join("");
+
+  // 4. Visual Building Squad Board HTML (All 6 Positions)
+  const rosterBoardHTML = positionsList
+    .map((pos) => {
+      const quota = DRAFT_POS_QUOTAS[pos];
+      const selectedList = ds.selections[pos] || [];
+      const slots = [];
+      for (let i = 0; i < quota; i++) {
+        const player = selectedList[i];
+        if (player) {
+          slots.push(`
+            <div class="draft-slot-card filled">
+              <img src="${player.photo_url || DEFAULT_SILHOUETTE}" class="draft-slot-avatar" onerror="this.src='${DEFAULT_SILHOUETTE}';" />
+              <span class="draft-slot-name" title="${player.short_name}">${player.short_name}</span>
+              <button class="draft-slot-remove-btn" data-remove-pid="${player.player_id}" title="Remover do Elenco">✕</button>
+            </div>
+          `);
+        } else {
+          slots.push(`
+            <div class="draft-slot-card empty">
+              <span>+ ${pos} ${i + 1}</span>
+            </div>
+          `);
+        }
+      }
+      return `
+        <div class="draft-roster-pos-block">
+          <div class="draft-pos-block-title">${pos} (${selectedList.length}/${quota})</div>
+          <div class="draft-slots-row">${slots.join("")}</div>
+        </div>
+      `;
+    })
+    .join("");
+
+  container.innerHTML = `
+    <!-- IDENTITY CARD -->
+    <div class="draft-identity-card">
+      <div class="draft-identity-row">
+        <div class="draft-name-picker">
+          <label for="draft-name-select">Nome do Time:</label>
+          <select id="draft-name-select" class="draft-select-control">
+            ${nameOptionsHTML}
+          </select>
+          <button id="btn-draft-name-random" class="btn-gallery" style="padding:6px 10px;font-size:0.8rem;" title="Sortear Outro Nome">
+            🎲
+          </button>
+        </div>
+
+        <div class="draft-emblem-picker">
+          <span class="draft-emblem-label">Brasão:</span>
+          ${emblemTokensHTML}
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAFT TOOLBAR: POSITIONS & RE-ROLL -->
+    <div class="draft-toolbar">
+      <div class="draft-pos-stepper">
+        ${stepperHTML}
+      </div>
+
+      <div class="draft-actions-right">
+        <button id="btn-draft-reroll" class="btn-draft-reroll" ${ds.rerollsLeft <= 0 ? "disabled" : ""} title="Re-sortear os candidatos da posição ativa">
+          🎲 Re-roll (${ds.rerollsLeft} restantes)
+        </button>
+        <span class="draft-counter-badge">Elenco: ${totalSelected} / 24</span>
+      </div>
+    </div>
+
+    <!-- CANDIDATES SECTION -->
+    <div class="draft-candidates-section">
+      <div class="draft-candidates-header">
+        <div>
+          <span class="stage-pill">DRAFT DE ${currentPos} · ESCOLHA ${posQuota} ATLETAS</span>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin:3px 0 0;">
+            Mostrando ${candidates.length} candidatos para ${posQuota} vagas. Média histórica oculta para maior desafio tático!
+          </p>
+        </div>
+        <div style="font-size:0.85rem;font-weight:800;color:var(--text-gold);">
+          ${currentSelectedForPos.length} de ${posQuota} escolhidos
+        </div>
+      </div>
+
+      <div class="draft-candidates-grid" style="margin-top:10px;">
+        ${candidateCardsHTML}
+      </div>
+    </div>
+
+    <!-- BUILDING SQUAD BOARD -->
+    <div class="draft-roster-board">
+      <div class="draft-roster-header">
+        <span class="draft-roster-title">📋 Seu Elenco Temporal em Formação (${totalSelected}/24 Atletas)</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);">Clique no ✕ para desmarcar um atleta</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${rosterBoardHTML}
+      </div>
+
+      ${
+        isDraftComplete
+          ? `
+        <div class="draft-confirm-banner">
+          <div style="font-family:'Cinzel',serif;font-size:1.15rem;font-weight:900;color:var(--text-gold);">
+            🎉 Elenco de 24 Lendas Completo! Pronto para viajar no tempo.
+          </div>
+          <button id="btn-submit-draft" class="btn-chrono" style="font-size:1.02rem;padding:12px 32px;">
+            ⚡ Cravar ${ds.squadName} & Ir para Coordenadas Temporais (Stage 2) →
+          </button>
+        </div>
+      `
+          : ""
+      }
+    </div>
+  `;
+
+  // Attach Event Listeners
+  const nameSelect = document.getElementById("draft-name-select");
+  if (nameSelect) {
+    nameSelect.addEventListener("change", (e) => {
+      ds.squadName = e.target.value;
+      updateDockPrimaryCta();
+    });
+  }
+
+  const nameRandomBtn = document.getElementById("btn-draft-name-random");
+  if (nameRandomBtn) {
+    nameRandomBtn.addEventListener("click", () => {
+      const idx = Math.floor(Math.random() * DRAFT_NAMES.length);
+      ds.squadName = DRAFT_NAMES[idx];
+      renderDraftMode();
+      updateDockPrimaryCta();
+    });
+  }
+
+  container.querySelectorAll("[data-draft-emblem]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      ds.emblemUrl = btn.getAttribute("data-draft-emblem");
+      renderDraftMode();
+    });
+  });
+
+  container.querySelectorAll("[data-draft-pos]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      ds.currentPos = btn.getAttribute("data-draft-pos");
+      renderDraftMode();
+      updateDockPrimaryCta();
+    });
+  });
+
+  const rerollBtn = document.getElementById("btn-draft-reroll");
+  if (rerollBtn) {
+    rerollBtn.addEventListener("click", handleDraftReroll);
+  }
+
+  container.querySelectorAll("[data-candidate-pid]").forEach((card) => {
+    card.addEventListener("click", () => {
+      const pid = parseInt(card.getAttribute("data-candidate-pid"), 10);
+      toggleDraftCandidate(pid);
+    });
+  });
+
+  container.querySelectorAll("[data-remove-pid]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const pid = parseInt(btn.getAttribute("data-remove-pid"), 10);
+      removeDraftAthlete(pid);
+    });
+  });
+
+  const submitDraftBtn = document.getElementById("btn-submit-draft");
+  if (submitDraftBtn) {
+    submitDraftBtn.addEventListener("click", submitDraftRooster);
+  }
+}
+
+function toggleDraftCandidate(pid) {
+  if (!appState.draftState) return;
+  const ds = appState.draftState;
+  const pos = ds.currentPos;
+  const posQuota = DRAFT_POS_QUOTAS[pos];
+  const list = ds.selections[pos] || [];
+  const existingIdx = list.findIndex((p) => p.player_id === pid);
+
+  if (existingIdx >= 0) {
+    list.splice(existingIdx, 1);
+  } else {
+    if (list.length >= posQuota) {
+      showLineupDiagnosticToast(`⚠️ Você já selecionou os ${posQuota} atletas de ${pos}! Remova um para trocar.`, false);
+      return;
+    }
+    const cand = (ds.candidates[pos] || []).find((p) => p.player_id === pid);
+    if (cand) {
+      list.push(cand);
+    }
+  }
+
+  if (list.length === posQuota) {
+    const positionsList = ["GOL", "ZAG", "LAT", "MEI", "ATA", "TEC"];
+    const nextIncomplete = positionsList.find((p) => (ds.selections[p] || []).length < DRAFT_POS_QUOTAS[p]);
+    if (nextIncomplete && nextIncomplete !== pos) {
+      setTimeout(() => {
+        ds.currentPos = nextIncomplete;
+        renderDraftMode();
+        updateDockPrimaryCta();
+      }, 350);
+    }
+  }
+
+  renderDraftMode();
+  updateDockPrimaryCta();
+}
+
+function removeDraftAthlete(pid) {
+  if (!appState.draftState) return;
+  const ds = appState.draftState;
+  Object.keys(ds.selections).forEach((pos) => {
+    ds.selections[pos] = ds.selections[pos].filter((p) => p.player_id !== pid);
+  });
+  renderDraftMode();
+  updateDockPrimaryCta();
+}
+
+async function submitDraftRooster() {
+  if (!appState.draftState) return;
+  const ds = appState.draftState;
+  const allIds = Object.values(ds.selections)
+    .flat()
+    .map((p) => p.player_id);
+
+  if (allIds.length !== 24) {
+    showLineupDiagnosticToast(`⚠️ Selecione exatamente 24 atletas! Faltam ${24 - allIds.length}.`, false);
+    return;
+  }
+
+  const aiDiff = document.getElementById("ai-difficulty")?.value || "veteran";
+  const seriesMode = document.getElementById("series-mode")?.value || "bo3";
+
+  try {
+    const res = await fetch("/api/stage1/draft-submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        drafted_player_ids: allIds,
+        squad_name: ds.squadName,
+        emblem_url: ds.emblemUrl,
+        ai_difficulty: aiDiff,
+        series_mode: seriesMode,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      showLineupDiagnosticToast(`Erro ao cravar draft: ${err.error || res.statusText}`, false);
+      return;
+    }
+    const data = await res.json();
+    syncFromServer(data);
+    renderAll();
+  } catch (err) {
+    console.error("Draft submit error", err);
+    showLineupDiagnosticToast("Erro de comunicação ao enviar draft.", false);
   }
 }
 
@@ -3182,9 +3663,23 @@ function updateDockPrimaryCta() {
 
   if (stage === 1) {
     if (appState.humanRoosterIdx === null) {
-      const activeName = appState.roosters[appState.activeRoosterIdx]?.name || "Squad";
-      ctaIcon.textContent = "⚙️";
-      ctaText.textContent = `Escolher ${activeName}`;
+      if (appState.stage1Mode === "draft" && appState.draftState) {
+        const total = Object.values(appState.draftState.selections).reduce((a, b) => a + b.length, 0);
+        if (total === 24) {
+          ctaIcon.textContent = "⚡";
+          ctaText.textContent = "Cravar Draft (24/24)";
+        } else {
+          const curPos = appState.draftState.currentPos;
+          const posCount = (appState.draftState.selections[curPos] || []).length;
+          const quota = DRAFT_POS_QUOTAS[curPos] || 0;
+          ctaIcon.textContent = "📋";
+          ctaText.textContent = `Draftar ${curPos} (${posCount}/${quota})`;
+        }
+      } else {
+        const activeName = appState.roosters[appState.activeRoosterIdx]?.name || "Squad";
+        ctaIcon.textContent = "⚙️";
+        ctaText.textContent = `Escolher ${activeName}`;
+      }
     } else {
       ctaIcon.textContent = "🧭";
       ctaText.textContent = "Coordenadas (Stage 2)";
@@ -3264,7 +3759,17 @@ function handleDockPrimaryCtaClick() {
 
   if (stage === 1) {
     if (appState.humanRoosterIdx === null) {
-      selectRooster(appState.activeRoosterIdx);
+      if (appState.stage1Mode === "draft" && appState.draftState) {
+        const total = Object.values(appState.draftState.selections).reduce((a, b) => a + b.length, 0);
+        if (total === 24) {
+          submitDraftRooster();
+        } else {
+          const candSec = document.querySelector(".draft-candidates-section");
+          if (candSec) candSec.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      } else {
+        selectRooster(appState.activeRoosterIdx);
+      }
     } else {
       appState.stage = 2;
       renderAll();
@@ -3791,8 +4296,7 @@ function renderAll() {
   renderStepper();
   renderMatchHud();
   if (appState.stage === 1) {
-    renderRoosterCarousel();
-    renderPlayerShowcase();
+    renderStage1();
   } else if (appState.stage === 2) {
     renderStage2();
   } else if (appState.stage === 3) {
@@ -3823,6 +4327,8 @@ async function rerollNewRun() {
   appState.maxUnlockedStage = 1;
   appState.stage6Starters = [];
   appState.stage7Starters = [];
+  appState.draftState = null;
+  appState.stage1Mode = "squads";
   renderStepper();
   appState.isAnimatingVortex = true;
 
@@ -4013,6 +4519,23 @@ document.addEventListener("DOMContentLoaded", () => {
       renderPlayerShowcase();
     });
   });
+
+  // Stage 1 Mode Toggle (Time Squads vs Temporal Draft)
+  const btnModeSquads = document.getElementById("btn-mode-squads");
+  const btnModeDraft = document.getElementById("btn-mode-draft");
+  if (btnModeSquads && btnModeDraft) {
+    btnModeSquads.addEventListener("click", () => {
+      appState.stage1Mode = "squads";
+      renderStage1();
+      updateDockPrimaryCta();
+    });
+    btnModeDraft.addEventListener("click", () => {
+      appState.stage1Mode = "draft";
+      if (!appState.draftState) initDraftState();
+      renderStage1();
+      updateDockPrimaryCta();
+    });
+  }
 
   document.getElementById("btn-view-3d").addEventListener("click", () => setViewMode("3d"));
   document.getElementById("btn-view-grid").addEventListener("click", () => setViewMode("grid"));

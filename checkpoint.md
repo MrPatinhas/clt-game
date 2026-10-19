@@ -103,10 +103,38 @@
 
 ---
 
-## 8. Phase 10: Temporal Draft Mode (Upcoming Scope)
-- [ ] **Dual Stage 1 Entry Point:** Toggle between "Definied Time Squads" (current 7 pre-built squads) and "Temporal Draft".
-- [ ] **Positional Draft Grid:** Human coach selects athletes position-by-position (GOL, ZAG, LAT, MEI, ATA, TEC) from the normalized player pool using the mobile-friendly Grade (Grid) layout.
-- [ ] **AI Counter-Draft / Squad Allocation:** AI engine draws its squad from the pre-generated time squads while excluding any athlete already drafted by the human coach.
-- [ ] **Local Verification Commitment:** Full end-to-end local testing on `http://127.0.0.1:8000` before staging and pushing to Railway production.
+## 8. Phase 10: Temporal Draft Mode (Complete & Verified Locally)
+- [x] **Dual Stage 1 Entry Point:** Seamless toggle between `⚙️ Esquadrões Prontos` and `⚡ Modo Draft Temporal`. Switching back to squads preserves the full 3D Carousel / Grid view and player showcase without breaking state.
+- [x] **Squad Identity Customization:**
+  - **10 Chrono-Themed Generic Names:** Dropdown with options (*Guardiões de Cronos*, *Viajantes do Éter*, *Oráculo Temporal*, *Relíquias do Século*, *Pêndulo Imortal*, *Pioneiros do Vórtice*, *Alquimistas do Tempo*, *Engrenagem Suprema*, *Horizonte de Eventos*, *Vanguarda da Ampulheta*) + `🎲` randomizer button.
+  - **Emblem Selection:** Visual picker of the 7 official steampunk emblems (`squad_a` through `squad_g`) with dynamic image preview.
+- [x] **Double-Quota Candidate Pool & Position Stepper:**
+  - Candidate offering is strictly $2\times$ the positional quota:
+    - GOL: 4 candidates offered $\rightarrow$ select 2
+    - ZAG: 8 candidates offered $\rightarrow$ select 4
+    - LAT: 8 candidates offered $\rightarrow$ select 4
+    - MEI: 16 candidates offered $\rightarrow$ select 8
+    - ATA: 10 candidates offered $\rightarrow$ select 5
+    - TEC: 2 candidates offered $\rightarrow$ select 1
+  - Stepper displays position progress badges (e.g. `GOL 2/2 ✓`, `ZAG 1/4`, etc.) with quick navigation between positions.
+- [x] **Re-roll Economy (3 Total Budget):**
+  - Coach has exactly 3 re-rolls across the entire draft session.
+  - Active position candidates are re-sampled from the 168-player pool while intelligently keeping already selected candidates.
+- [x] **Blind Information Masking:**
+  - Displays: Player Photo, Short & Full Name, Position Badge, Clubs Defended (Badges + Games), Active Years (e.g. `2015–2023`), and Total Matches (`174 partidas`).
+  - Strict masking: Historical average (`avg_score`) and ranking scores are hidden to test football intuition and strategic drafting.
+- [x] **Building Squad Board:**
+  - Pinned below candidates, visualizes all 24 slots across the 6 positions in real time.
+  - Filled slots show athlete photo, name, club badges, and an `✕` remove button.
+  - Empty slots indicate pending quota.
+- [x] **Persistent Dock Primary CTA Integration:**
+  - Reflects real-time draft progress (`📋 Draftar GOL (0/2)` $\rightarrow$ `⚡ Cravar Draft (24/24)`).
+  - Triggers draft submission to backend `/api/stage1/draft-submit`.
+- [x] **AI Collision Resolution & Anti-Overlap Engine:**
+  - Implemented in `app/engine/game_state.py` (`submit_draft_rooster()`).
+  - AI selects an existing Time Squad; any overlap with drafted athletes is replaced with undrafted athletes of identical position from the 144 remaining players.
+  - Verified mathematically: $\text{Human} \cap \text{AI} = \emptyset$.
+- [x] **Local E2E Verification:** Tested full flow locally from Stage 1 Draft through Stage 8 Match Summary. Local server running at `http://127.0.0.1:8000`.
+
 
 
