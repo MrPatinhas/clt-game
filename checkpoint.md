@@ -73,4 +73,40 @@
   - Replaced eager conversion of 359,385 Parquet rows into hundreds of thousands of Python dicts (`to_dict('records')` which consumed ~545 MB of RAM and triggered Linux container freeze/OOM on Railway) with `ScoutsBySeasonRound`.
   - Memory consumption plummeted from **545 MB to 86 MB** (~84% reduction), boot time reduced to **0.6 seconds**, and unbuffered log output enabled (`flush=True`).
 
+---
+
+## 7. Phase 9: Modal Layout & Ergonomic Controls Overhaul (Complete)
+- [x] **Sofascore Share Modal Layout & Sticky WhatsApp Button:**
+  - Diagnosed root cause of `bugs/missing_copy_button_font_wrong_size.png`: modal window lacked viewport height constraints (`max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;`), pushing the copy button beyond the viewport on smaller displays.
+  - Implemented pinned `.share-modal-footer` with sticky bottom positioning and styled `.share-modal-body` with `flex: 1; overflow-y: auto;` so content scrolls cleanly on any screen height.
+  - Structured `.timeline-match-row` into a 3-column CSS Grid (`130px 1fr 88px`) preventing awkward word-wrapping (`Time ... 15.40`).
+  - Calibrated font sizes across badge, headline, and score elements.
+- [x] **Persistent Dock Primary Call-To-Action (`#dock-primary-cta`):**
+  - Converted center of the persistent bottom dock into an intelligent, high-visibility CTA button (`#dock-primary-cta`).
+  - Automatically adapts icon, text, and click delegation to the active stage:
+    - Stage 1: `⚙️ Escolher Squad Selecionado`
+    - Stage 2: `⚡ Cravar Coordenadas (Rodada #X / Temporada Y)`
+    - Stage 3: `⚔️ Confirmar Troca` / `⏭️ Passar no Bucket`
+    - Stage 4: `📜 Regras Malucas (Stage 5)`
+    - Stage 5: `🔒 Selar Regra & Escalar (Stage 6)`
+    - Stage 6: `⚡ Iniciar 1º Tempo` (or `📋 Escalar 11`) / `⏸️ Ir ao Intervalo`
+    - Stage 7: `🔥 Iniciar 2º Tempo` / `🏆 Ver Placar Final`
+    - Stage 8: `📱 Compartilhar no WhatsApp` / `⏭️ Próxima Partida`
+  - Fully responsive across desktop, tablet, and mobile.
+- [x] **Stage 2 Interactive Clockwork Rolling Tape Picker:**
+  - Replaced the 38 static square buttons with an interactive horizontal rolling dial stripe.
+  - Features `◀` and `▶` steppers, active round card display with round context (`1º Turno (Ida)` vs `2º Turno (Volta)`, `🔥 Reta Final Decisiva`), and smooth auto-centering on selection.
+- [x] **Header Cluster Organization:**
+  - Reorganized `#app-header` into two distinct labeled clusters:
+    - **⚙️ Game Settings:** Oráculo IA, Série (MD3 default), Modo Claro toggle, Nova Série.
+    - **📖 Help Section:** Como Jogar, Regras & Power-Ups, Acervo (26).
+
+---
+
+## 8. Phase 10: Temporal Draft Mode (Upcoming Scope)
+- [ ] **Dual Stage 1 Entry Point:** Toggle between "Definied Time Squads" (current 7 pre-built squads) and "Temporal Draft".
+- [ ] **Positional Draft Grid:** Human coach selects athletes position-by-position (GOL, ZAG, LAT, MEI, ATA, TEC) from the normalized player pool using the mobile-friendly Grade (Grid) layout.
+- [ ] **AI Counter-Draft / Squad Allocation:** AI engine draws its squad from the pre-generated time squads while excluding any athlete already drafted by the human coach.
+- [ ] **Local Verification Commitment:** Full end-to-end local testing on `http://127.0.0.1:8000` before staging and pushing to Railway production.
+
 

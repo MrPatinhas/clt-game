@@ -797,20 +797,64 @@ function renderStage2() {
     `;
   } else {
     const rounds = Array.from({ length: 38 }, (_, i) => i + 1);
+    const curRound = appState.stage2SelectedVal;
+    const roundContext = curRound <= 19 ? "1º Turno (Ida)" : "2º Turno (Volta)";
+    const roundStage = curRound >= 35 ? "🔥 Reta Final Decisiva" : (curRound <= 5 ? "⚡ Início de Temporada" : "Temporada Regular");
+
     selectorHTML = `
-      <h3 style="font-family:'Cinzel',serif;color:var(--text-gold);margin-bottom:12px;">
-        🧭 Escolha a Rodada do Campeonato (1–38) ${s2.season ? `da Temporada ${s2.season}` : ""}
-      </h3>
-      <div class="round-grid">
-        ${rounds
-          .map(
-            (r) => `
-          <button class="round-dial-btn ${appState.stage2SelectedVal === r ? "selected" : ""}" data-s2-val="${r}">
-            #${String(r).padStart(2, "0")}
+      <div class="temporal-dial-box">
+        <div class="temporal-dial-header">
+          <div>
+            <span class="stage-pill">🧭 COORDENADA DA RODADA (1–38)</span>
+            <h3 style="font-family:'Cinzel',serif;color:var(--text-gold);margin:4px 0 2px;">
+              Fita Temporal de Rodadas ${s2.season ? `(Temporada ${s2.season})` : ""}
+            </h3>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">
+              Use os botões ◀ / ▶, deslize a fita horizontal ou clique na rodada desejada:
+            </p>
+          </div>
+
+          <div class="temporal-dial-display-card">
+            <span class="dial-card-label">RODADA SELECIONADA</span>
+            <div class="dial-card-big-num">
+              <span class="dial-hash">#</span><span id="dial-active-num">${String(curRound).padStart(2, "0")}</span>
+            </div>
+            <span class="dial-card-badge" id="dial-active-badge">
+              ${roundContext} · ${roundStage}
+            </span>
+          </div>
+        </div>
+
+        <div class="dial-roller-container">
+          <button id="dial-btn-prev" class="dial-stepper-btn" title="Rodada Anterior (◀)">
+            ◀
           </button>
-        `
-          )
-          .join("")}
+
+          <div class="dial-track-viewport" id="dial-viewport">
+            <div class="dial-track-tape" id="dial-tape">
+              ${rounds
+                .map(
+                  (r) => `
+                <button
+                  class="dial-tick-item ${curRound === r ? "selected-tick" : ""}"
+                  data-s2-val="${r}"
+                  id="dial-tick-${r}"
+                  title="Selecionar Rodada #${r}"
+                >
+                  <span class="tick-sub">RODADA</span>
+                  <span class="tick-val">#${String(r).padStart(2, "0")}</span>
+                  <span class="tick-dot"></span>
+                </button>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <button id="dial-btn-next" class="dial-stepper-btn" title="Próxima Rodada (▶)">
+            ▶
+          </button>
+        </div>
       </div>
     `;
   }
@@ -886,6 +930,34 @@ function renderStage2() {
       appState.stage2SelectedVal = 2019;
       renderStage2();
     });
+  }
+
+  const dialPrev = document.getElementById("dial-btn-prev");
+  const dialNext = document.getElementById("dial-btn-next");
+  if (dialPrev) {
+    dialPrev.addEventListener("click", () => {
+      if (appState.stage2SelectedVal > 1) {
+        appState.stage2SelectedVal -= 1;
+        renderStage2();
+      }
+    });
+  }
+  if (dialNext) {
+    dialNext.addEventListener("click", () => {
+      if (appState.stage2SelectedVal < 38) {
+        appState.stage2SelectedVal += 1;
+        renderStage2();
+      }
+    });
+  }
+
+  if (mode === "round") {
+    const activeTick = document.getElementById(`dial-tick-${appState.stage2SelectedVal}`);
+    if (activeTick) {
+      setTimeout(() => {
+        activeTick.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      }, 50);
+    }
   }
 
   container.querySelectorAll("[data-s2-val]").forEach((btn) => {
@@ -2613,6 +2685,9 @@ function openShareModal() {
 
   const timelineContainer = document.getElementById("share-timeline-items");
   if (timelineContainer) {
+    const hShort = hRooster.name ? hRooster.name.replace("Time ", "") : "Você";
+    const aShort = aRooster.name ? aRooster.name.replace("Time ", "") : "IA";
+
     timelineContainer.innerHTML = matches
       .map((m) => {
         const hWon = m.winner === "human";
@@ -2621,18 +2696,18 @@ function openShareModal() {
             <div class="timeline-meta-col">
               <span class="timeline-match-tag">Partida #${m.match_number}</span>
               <span class="timeline-coord-tag">⏳ ${m.season} · 🧭 R#${m.round}</span>
-              <span class="timeline-rule-tag">🎩 ${m.rule_name || "Cartola"}</span>
+              <span class="timeline-rule-tag" title="${m.rule_name || "Cartola"}">🎩 ${m.rule_name || "Cartola"}</span>
             </div>
 
             <div class="timeline-sofascore-duel">
               <div class="timeline-side human ${hWon ? "side-winner" : ""}">
-                <span class="timeline-team-name">${hRooster.name.split(" ")[0] || "Você"}</span>
+                <span class="timeline-team-name">${hShort}</span>
                 <span class="timeline-score ${hWon ? "winner" : ""}">${(m.human_total || 0).toFixed(2)}</span>
               </div>
               <span class="timeline-duel-sep">-</span>
               <div class="timeline-side ai ${!hWon ? "side-winner" : ""}">
                 <span class="timeline-score ${!hWon ? "winner" : ""}">${(m.ai_total || 0).toFixed(2)}</span>
-                <span class="timeline-team-name">${aRooster.name.split(" ")[0] || "IA"}</span>
+                <span class="timeline-team-name">${aShort}</span>
               </div>
             </div>
 
@@ -3084,6 +3159,180 @@ function renderMinimizedDock() {
   document.getElementById("dock-human-name").innerHTML = `<img src="${hEmblem}" class="dock-emblem-mini" style="vertical-align:middle;margin-right:6px;" /> ${hRooster.name}`;
   document.getElementById("dock-ai-name").innerHTML = `<img src="${aEmblem}" class="dock-emblem-mini" style="vertical-align:middle;margin-right:6px;" /> ${aRooster.name}`;
   document.getElementById("dock-stage-indicator").textContent = `⏳ STAGE ${appState.stage} · SÉRIE ${appState.human_wins} x ${appState.ai_wins}`;
+  updateDockPrimaryCta();
+}
+
+function updateDockPrimaryCta() {
+  const ctaBtn = document.getElementById("dock-primary-cta");
+  const ctaIcon = document.getElementById("dock-cta-icon");
+  const ctaText = document.getElementById("dock-cta-text");
+  const stageIndicator = document.getElementById("dock-stage-indicator");
+  if (!ctaBtn || !ctaIcon || !ctaText) return;
+
+  const stage = appState.stage;
+  const s2 = appState.stage2 || {};
+  const s3 = appState.stage3 || {};
+  const s5 = appState.stage5 || {};
+  const s6 = appState.stage6 || {};
+  const s7 = appState.stage7 || {};
+
+  if (stageIndicator) {
+    stageIndicator.textContent = `⏳ ETAPA ${stage}/8 · SÉRIE ${appState.human_wins} x ${appState.ai_wins}`;
+  }
+
+  if (stage === 1) {
+    if (appState.humanRoosterIdx === null) {
+      const activeName = appState.roosters[appState.activeRoosterIdx]?.name || "Squad";
+      ctaIcon.textContent = "⚙️";
+      ctaText.textContent = `Escolher ${activeName}`;
+    } else {
+      ctaIcon.textContent = "🧭";
+      ctaText.textContent = "Coordenadas (Stage 2)";
+    }
+  } else if (stage === 2) {
+    if (s2.completed) {
+      ctaIcon.textContent = "🏺";
+      ctaText.textContent = "Bucket of Souls (Stage 3)";
+    } else {
+      ctaIcon.textContent = "⚡";
+      const valText = appState.stage2ParamType === "season" ? `Ano ${appState.stage2SelectedVal}` : `Rodada #${appState.stage2SelectedVal}`;
+      ctaText.textContent = `Cravar ${valText}`;
+    }
+  } else if (stage === 3) {
+    if (s3.completed) {
+      ctaIcon.textContent = "👁️";
+      ctaText.textContent = "Ir ao Destino (Stage 4)";
+    } else if (appState.selectedBucketPlayerId && appState.selectedDropPlayerId) {
+      ctaIcon.textContent = "⚔️";
+      ctaText.textContent = "Confirmar Troca";
+    } else {
+      ctaIcon.textContent = "⏭️";
+      ctaText.textContent = "Passar no Bucket";
+    }
+  } else if (stage === 4) {
+    ctaIcon.textContent = "📜";
+    ctaText.textContent = "Regras Malucas (Stage 5)";
+  } else if (stage === 5) {
+    if (s5.locked) {
+      ctaIcon.textContent = "🎩";
+      ctaText.textContent = "Prancheta Tática (Stage 6)";
+    } else {
+      ctaIcon.textContent = "🔒";
+      ctaText.textContent = "Selar Regra & Escalar";
+    }
+  } else if (stage === 6) {
+    if (s6.completed) {
+      ctaIcon.textContent = "⏸️";
+      ctaText.textContent = "Ir ao Intervalo (Stage 7)";
+    } else {
+      const starters = appState.stage6Starters || [];
+      if (starters.length === 11 && appState.stage6CaptainId) {
+        ctaIcon.textContent = "⚡";
+        ctaText.textContent = "Iniciar 1º Tempo";
+      } else {
+        ctaIcon.textContent = "📋";
+        ctaText.textContent = `Escalar 11 (${starters.length}/11)`;
+      }
+    }
+  } else if (stage === 7) {
+    if (s7.completed) {
+      ctaIcon.textContent = "🏆";
+      ctaText.textContent = "Ver Placar Final (Stage 8)";
+    } else {
+      ctaIcon.textContent = "🔥";
+      ctaText.textContent = "Iniciar 2º Tempo";
+    }
+  } else if (stage === 8) {
+    const isSeriesConcluded = appState.human_wins >= appState.target_wins || appState.ai_wins >= appState.target_wins;
+    if (isSeriesConcluded) {
+      ctaIcon.textContent = "📱";
+      ctaText.textContent = "Compartilhar WhatsApp";
+    } else {
+      ctaIcon.textContent = "⏭️";
+      ctaText.textContent = "Próxima Partida";
+    }
+  }
+}
+
+function handleDockPrimaryCtaClick() {
+  const stage = appState.stage;
+  const s2 = appState.stage2 || {};
+  const s3 = appState.stage3 || {};
+  const s5 = appState.stage5 || {};
+  const s6 = appState.stage6 || {};
+  const s7 = appState.stage7 || {};
+
+  if (stage === 1) {
+    if (appState.humanRoosterIdx === null) {
+      selectRooster(appState.activeRoosterIdx);
+    } else {
+      appState.stage = 2;
+      renderAll();
+    }
+  } else if (stage === 2) {
+    if (s2.completed) {
+      appState.stage = 3;
+      renderAll();
+    } else {
+      const confirmBtn = document.getElementById("btn-s2-confirm");
+      if (confirmBtn) confirmBtn.click();
+    }
+  } else if (stage === 3) {
+    if (s3.completed) {
+      appState.stage = 4;
+      renderAll();
+    } else if (appState.selectedBucketPlayerId && appState.selectedDropPlayerId) {
+      const swapBtn = document.getElementById("btn-s3-confirm-swap");
+      if (swapBtn) swapBtn.click();
+    } else {
+      const passBtn = document.getElementById("btn-s3-pass");
+      if (passBtn) passBtn.click();
+    }
+  } else if (stage === 4) {
+    const procBtn = document.getElementById("btn-s4-proceed-s5") || document.getElementById("btn-s4-proceed-top");
+    if (procBtn) {
+      procBtn.click();
+    } else {
+      appState.stage = 5;
+      renderAll();
+    }
+  } else if (stage === 5) {
+    if (s5.locked) {
+      appState.stage = 6;
+      renderAll();
+    } else {
+      const procBtn = document.getElementById("btn-s5-proceed");
+      if (procBtn) procBtn.click();
+    }
+  } else if (stage === 6) {
+    if (s6.completed) {
+      appState.stage = 7;
+      renderAll();
+    } else {
+      const kickoffBtn = document.getElementById("btn-s6-kickoff");
+      if (kickoffBtn) kickoffBtn.click();
+    }
+  } else if (stage === 7) {
+    if (s7.completed) {
+      appState.stage = 8;
+      renderAll();
+    } else {
+      const confirmBtn = document.getElementById("btn-s7-confirm");
+      if (confirmBtn) confirmBtn.click();
+    }
+  } else if (stage === 8) {
+    const isSeriesConcluded = appState.human_wins >= appState.target_wins || appState.ai_wins >= appState.target_wins;
+    if (isSeriesConcluded) {
+      openShareModal();
+    } else {
+      const nextMatchBtn = document.getElementById("btn-s8-next-match");
+      if (nextMatchBtn) {
+        nextMatchBtn.click();
+      } else {
+        openShareModal();
+      }
+    }
+  }
 }
 
 function buildModalActiveLineupHTML(rooster, isHuman) {
@@ -3828,6 +4077,11 @@ document.addEventListener("DOMContentLoaded", () => {
       openRoosterModal(appState.aiRoosterIdx, "🤖 TIME SQUAD DA IA · ESCALAÇÃO & ELENCO (24 ATLETAS)", false);
     }
   });
+
+  const dockPrimaryCta = document.getElementById("dock-primary-cta");
+  if (dockPrimaryCta) {
+    dockPrimaryCta.addEventListener("click", handleDockPrimaryCtaClick);
+  }
 
   document.getElementById("modal-close-btn").addEventListener("click", () => {
     document.getElementById("rooster-modal").classList.add("hidden");

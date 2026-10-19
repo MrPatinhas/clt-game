@@ -24,42 +24,54 @@
     </div>
 
     <div class="topbar-controls">
-      <div class="control-group">
-        <label for="ai-difficulty">Oráculo IA</label>
-        <select id="ai-difficulty">
-          <option value="rookie">Estagiário do Tempo (Média Geral)</option>
-          <option value="veteran" selected>Cartoleiro Pro (Média do Ano)</option>
-          <option value="oracle">Oráculo Temporal (Score Real + Ruído)</option>
-        </select>
+      <!-- CLUSTER 1: GAME SETTINGS -->
+      <div class="header-cluster settings-cluster">
+        <span class="cluster-subtitle">⚙️ Game Settings</span>
+        <div class="cluster-controls-row">
+          <div class="control-group">
+            <label for="ai-difficulty">Oráculo IA</label>
+            <select id="ai-difficulty">
+              <option value="rookie">Estagiário do Tempo</option>
+              <option value="veteran" selected>Cartoleiro Pro</option>
+              <option value="oracle">Oráculo Temporal</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="series-mode">Série</label>
+            <select id="series-mode">
+              <option value="bo3" selected>MD3 (2 Vitórias)</option>
+              <option value="bo5">MD5 (3 Vitórias)</option>
+            </select>
+          </div>
+
+          <button id="btn-theme-toggle" class="btn-gallery header-btn" title="Alternar entre Modo Escuro (Noturno) e Modo Claro (Pergaminho Creme)">
+            🌙 Modo Escuro
+          </button>
+
+          <button id="btn-reroll-run" class="btn-chrono header-btn" title="Abre uma fenda temporal e sorteia 7 novos Time Squads do pool de ~300 lendas">
+            <span class="gear-spin-icon">⚙️</span> Nova Série <span id="run-badge" class="mono-badge">#1</span>
+          </button>
+        </div>
       </div>
 
-      <div class="control-group">
-        <label for="series-mode">Série Temporal</label>
-        <select id="series-mode">
-          <option value="bo3" selected>Melhor de 3 (2 Vitórias)</option>
-          <option value="bo5">Melhor de 5 (3 Vitórias)</option>
-        </select>
+      <!-- CLUSTER 2: HELP SECTION -->
+      <div class="header-cluster help-cluster">
+        <span class="cluster-subtitle">📖 Help Section</span>
+        <div class="cluster-controls-row">
+          <button id="btn-open-tutorial-tab" class="btn-gallery header-btn" title="Abrir Tutorial Passo a Passo Ilustrado com Exemplos de Turno">
+            📖 Como Jogar
+          </button>
+
+          <button id="btn-open-codex-tab" class="btn-gallery header-btn" title="Guia Completo: Era 2014–2025, 3 Power-Ups e 8 Regras Malucas">
+            📜 Regras & Power-Ups
+          </button>
+
+          <button id="btn-open-art-gallery" class="btn-gallery header-btn" title="Inspecionar Emblemas, Power-Ups e Regras Malucas geradas">
+            🎨 Acervo (26)
+          </button>
+        </div>
       </div>
-
-      <button id="btn-open-tutorial-tab" class="btn-gallery" title="Abrir Tutorial Passo a Passo Ilustrado com Exemplos de Turno">
-        📖 Como Jogar (Tutorial)
-      </button>
-
-      <button id="btn-open-codex-tab" class="btn-gallery" title="Guia Completo: Era 2014–2025, 3 Power-Ups e 8 Regras Malucas">
-        📜 Regras, Power-Ups & Era
-      </button>
-
-      <button id="btn-open-art-gallery" class="btn-gallery" title="Inspecionar Emblemas, Power-Ups e Regras Malucas geradas">
-        🎨 Acervo (26)
-      </button>
-
-      <button id="btn-theme-toggle" class="btn-gallery" title="Alternar entre Modo Escuro (Noturno) e Modo Claro (Pergaminho Creme)">
-        🌙 Modo Escuro
-      </button>
-
-      <button id="btn-reroll-run" class="btn-chrono" title="Abre uma fenda temporal e sorteia 7 novos Time Squads do pool de ~300 lendas">
-        <span class="gear-spin-icon">⚙️</span> Viajar no Tempo <span id="run-badge" class="mono-badge">Linha #1</span>
-      </button>
     </div>
   </header>
 
@@ -375,7 +387,10 @@
     </button>
 
     <div class="dock-center-status">
-      <span id="dock-stage-indicator">⏳ STAGE 2 ATIVO</span>
+      <button id="dock-primary-cta" class="dock-cta-btn" title="Ação principal desta etapa da partida">
+        <span id="dock-cta-icon">⚡</span> <span id="dock-cta-text">Ação do Turno</span>
+      </button>
+      <span id="dock-stage-indicator" class="dock-stage-indicator">⏳ STAGE 2 ATIVO</span>
     </div>
 
     <button id="dock-ai-btn" class="dock-tab ai-dock" title="Consultar os 24 atletas do Time Squad da IA">
