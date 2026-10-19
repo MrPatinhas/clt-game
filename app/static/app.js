@@ -3394,6 +3394,39 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPlayerShowcase();
   });
 
+  // Mobile Touch Swipe Navigation for Carousels
+  function setupTouchSwipe(elId, onLeft, onRight) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    let startX = 0;
+    let startY = 0;
+    el.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    el.addEventListener("touchend", (e) => {
+      if (e.changedTouches.length === 1) {
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) onLeft();
+          else onRight();
+        }
+      }
+    }, { passive: true });
+  }
+
+  setupTouchSwipe("rooster-stage-3d", 
+    () => document.getElementById("rooster-next")?.click(), 
+    () => document.getElementById("rooster-prev")?.click()
+  );
+  setupTouchSwipe("player-stage-3d", 
+    () => document.getElementById("player-next")?.click(), 
+    () => document.getElementById("player-prev")?.click()
+  );
+
   window.addEventListener("keydown", (e) => {
     if (appState.stage === 1) {
       if (e.key === "ArrowRight") {

@@ -30,9 +30,23 @@
 
 ---
 
-## 3. Deployment Packaging & Multi-Tenancy (Phase 6 Progress)
+## 3. Deployment Packaging & Multi-Tenancy (Phase 6 Complete)
 - [x] **Step 6.1 — Relative Path Portability:** Replaced Windows hardcoded paths with dynamic `Path(__file__).resolve().parent...` in [main.py](file:///C:/Users/thiag/Documents/CLT/app/main.py), [game_state.py](file:///C:/Users/thiag/Documents/CLT/app/engine/game_state.py), and [data_prep.py](file:///C:/Users/thiag/Documents/CLT/app/engine/data_prep.py).
 - [x] **Step 6.2 — Multi-Tenant Session Isolation:** Implemented thread-safe `SessionManager` in [main.py](file:///C:/Users/thiag/Documents/CLT/app/main.py) with `clt_session_id` cookies, dynamic `$PORT` binding (`0.0.0.0`), and background TTL cleaner. Verified 100% isolated games via [qa_verify_sessions.py](file:///C:/Users/thiag/Documents/CLT/pipeline/qa_verify_sessions.py).
 - [x] **Step 6.3 — Production Packaging:** Created [requirements.txt](file:///C:/Users/thiag/Documents/CLT/requirements.txt), [.gitignore](file:///C:/Users/thiag/Documents/CLT/.gitignore), [Dockerfile](file:///C:/Users/thiag/Documents/CLT/Dockerfile), [railway.json](file:///C:/Users/thiag/Documents/CLT/railway.json), and [Procfile](file:///C:/Users/thiag/Documents/CLT/Procfile).
-- [x] **Step 6.4 — GitHub Repository Pushed:** Published initial release `75e78fe` to [github.com/MrPatinhas/clt-game](https://github.com/MrPatinhas/clt-game).
-- [ ] **Step 6.5 — Railway Deployment & Public Domain:** Connect GitHub repo to Railway.app and verify public HTTPS URL.
+- [x] **Step 6.4 — GitHub Repository Pushed:** Published release to [github.com/MrPatinhas/clt-game](https://github.com/MrPatinhas/clt-game).
+- [x] **Step 6.5 — Railway Deployment & Public HTTPS:** Live at Railway with zero downtime CI/CD.
+
+---
+
+## 4. Phase 7: Mobile Responsiveness & Dual-World Architecture (Complete)
+- [x] **Physical Safety Backup:** Full clone preserved at `C:\Users\thiag\Documents\clt-desktop`.
+- [x] **Frozen Desktop Git Tag:** Tag `v1.0-desktop-gold` pushed to GitHub.
+- [x] **Zero Desktop Regression Guarantee:** All mobile overrides are scoped within `@media (max-width: 768px)` and `@media (max-width: 480px)`. Screens $> 768\text{px}$ remain 100% untouched down to the exact pixel.
+- [x] **Mobile Ergonomics (CSS):**
+  - Compact stacked header and scrollable telemetry HUD.
+  - Numbered stage stepper with inactive label collapse on small screens.
+  - Responsive 3D carousel scaling (`clamp` & `min` width) with touch-friendly arrows.
+  - Tactical mini-pitch auto-scaling with docked bench.
+  - Bottom-sheet pattern for consultation and tutorial modals.
+- [x] **Touch Gestures (JS):** Native touch-swipe navigation on mobile for 3D carousels in [app.js](file:///C:/Users/thiag/Documents/CLT/app/static/app.js).

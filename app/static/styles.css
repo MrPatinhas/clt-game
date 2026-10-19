@@ -3591,3 +3591,518 @@ body.light-mode .art-card p {
   color: #4A3F36;
 }
 
+/* ========================================================================== */
+/* PHASE 7: MOBILE RESPONSIVE MEDIA QUERIES (<= 768px & <= 480px)              */
+/* Base desktop styles remain 100% untouched for screens > 768px              */
+/* ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Global viewport containment */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .app-container {
+    padding: 8px 10px 84px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* 1. TOPBAR & BRAND MOBILE COMPACTION */
+  .topbar {
+    padding: 10px 14px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+    top: 0;
+  }
+
+  .brand {
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .brand-logo-frame {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  .brand-era-pill {
+    font-size: 0.62rem;
+    margin-bottom: 0;
+  }
+
+  .brand-text h1 {
+    font-size: 1.12rem;
+    line-height: 1.2;
+  }
+
+  .brand-text .subtitle {
+    display: none; /* Conserves critical mobile vertical space */
+  }
+
+  .topbar-controls {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .control-group {
+    min-width: 0;
+  }
+
+  .control-group select {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.74rem;
+    height: 38px;
+  }
+
+  .btn-gallery,
+  .btn-reset {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.74rem;
+    justify-content: center;
+  }
+
+  /* 2. MATCH TELEMETRY HUD BAR */
+  .match-hud-bar {
+    padding: 8px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 92;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .hud-pills-wrap {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: 100%;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hud-pills-wrap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hud-telemetry-pill {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    padding: 5px 9px;
+  }
+
+  .btn-reset-match {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.76rem;
+    min-height: 36px;
+  }
+
+  /* 3. STAGE STEPPER BAR */
+  .stage-stepper-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    gap: 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .stage-stepper-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stepper-divider {
+    display: none;
+  }
+
+  .stepper-item {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    gap: 6px;
+  }
+
+  /* 4. CHRONO PANELS & STAGE 1 SHOWCASE */
+  .chrono-panel,
+  .rooster-carousel-section,
+  .player-showcase-section {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .section-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .section-bar .carousel-nav-btns {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-arrow-btn {
+    width: 44px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  /* Stage 1: 3D Carousels Mobile Scaling */
+  .rooster-stage-3d {
+    height: 230px;
+    perspective: 750px;
+  }
+
+  .rooster-card-3d {
+    width: min(310px, 86vw);
+    height: 200px;
+    padding: 12px 14px;
+  }
+
+  .rooster-emblem-box {
+    width: 50px;
+    height: 50px;
+  }
+
+  .rooster-title-block h3 {
+    font-size: 1rem;
+  }
+
+  .player-stage-3d {
+    height: 340px;
+    perspective: 750px;
+  }
+
+  .athlete-card {
+    width: min(230px, 72vw);
+    height: 310px;
+    padding: 10px 12px;
+  }
+
+  .player-side-nav {
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+  }
+
+  .player-side-nav.left { left: 4px; }
+  .player-side-nav.right { right: 4px; }
+
+  /* 24-Card Grid on Tablet/Mobile */
+  .squad-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+    gap: 8px;
+  }
+
+  .table-responsive-container,
+  .rooster-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  /* 5. STAGE 2: PARAMETERS (YEAR & ROUND) */
+  .stage2-top-banner {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .stage2-panels-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .rounds-grid {
+    grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+    gap: 5px;
+  }
+
+  .seasons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+    gap: 6px;
+  }
+
+  .btn-round-choice,
+  .btn-season-choice {
+    min-height: 38px;
+    font-size: 0.8rem;
+  }
+
+  /* 6. STAGE 3: BUCKET OF THE SOULS */
+  .bucket-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .bucket-action-bar {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .btn-pass-bucket,
+  .btn-swap-bucket {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+    font-size: 0.88rem;
+  }
+
+  /* 7. STAGE 4: HIGHLIGHTS OF DESTINY */
+  .destiny-options-row {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .btn-destiny-choice {
+    width: 100%;
+    padding: 14px 16px;
+    min-height: 48px;
+  }
+
+  .destiny-bars-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .fixture-bar {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+
+  /* 8. STAGE 5: CRAZY RULE REVEAL */
+  .crazy-rule-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 14px;
+    padding: 16px 14px;
+  }
+
+  .crazy-rule-img {
+    max-width: 170px;
+    margin: 0 auto;
+  }
+
+  .comparison-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  /* 9. STAGE 6: TACTICAL MINI-PITCH & BENCH */
+  .pitch-workspace {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .soccer-pitch {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    max-height: 430px;
+    min-height: 350px;
+  }
+
+  .pitch-controls-bar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .formation-select-wrap {
+    width: 100%;
+  }
+
+  .bench-players-drawer {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .bench-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .btn-kickoff {
+    min-height: 48px;
+    font-size: 1.05rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* 10. STAGE 7: HALFTIME & POWER-UPS */
+  .halftime-scoreboard {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 14px;
+  }
+
+  .powerups-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .powerup-card {
+    padding: 14px;
+  }
+
+  /* 11. STAGE 8: MATCH CONCLUSION & ANALYTICS */
+  .series-progression-card {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    padding: 14px;
+  }
+
+  .match-mvp-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .report-columns {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .report-column {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 12. RESPONSIVE MODALS (MOBILE BOTTOM-SHEET PATTERN) */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-window {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    padding: 14px 16px 28px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-header {
+    padding: 10px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .modal-close-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .tutorial-step-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .codex-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* 13. MINIMIZED PERSISTENT DOCK */
+  .minimized-dock {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .dock-tab {
+    padding: 6px 8px;
+    min-height: 42px;
+    gap: 6px;
+    font-size: 0.72rem;
+  }
+
+  .dock-coach-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .dock-name {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #dock-stage-indicator {
+    font-size: 0.7rem;
+    padding: 0 4px;
+  }
+}
+
+/* ========================================================================== */
+/* ULTRA-COMPACT MOBILE BREAKPOINT (<= 480px, e.g. iPhone SE & small screens) */
+/* ========================================================================== */
+@media (max-width: 480px) {
+  .brand-text h1 {
+    font-size: 0.98rem;
+  }
+
+  /* Hide labels on inactive stepper buttons, keeping numbers only */
+  .stepper-item:not(.active) span:not(.stepper-num) {
+    display: none;
+  }
+
+  .stepper-item {
+    padding: 5px 8px;
+  }
+
+  .squad-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .bucket-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .athlete-card {
+    width: min(200px, 76vw);
+    height: 290px;
+  }
+
+  .rooster-card-3d {
+    width: min(280px, 88vw);
+    height: 185px;
+  }
+}
+
+
