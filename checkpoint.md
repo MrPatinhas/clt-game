@@ -69,5 +69,8 @@
   - **Human MVP Spotlight:** Highlights top-scoring human athlete with score, photo, and badge.
   - **1-Tap WhatsApp Clipboard Copy:** Generates formatted WhatsApp scorecard with emojis, match-by-match breakdown, human MVP, and direct link to `https://clt-cartologia.up.railway.app/`.
   - **Native Clipboard API + Fallback:** Resilient clipboard copying for iOS Safari, Chrome Android, and desktop browsers with visual feedback toast.
+- [x] **Railway Memory & Boot Optimization (CLTDataStore):**
+  - Replaced eager conversion of 359,385 Parquet rows into hundreds of thousands of Python dicts (`to_dict('records')` which consumed ~545 MB of RAM and triggered Linux container freeze/OOM on Railway) with `ScoutsBySeasonRound`.
+  - Memory consumption plummeted from **545 MB to 86 MB** (~84% reduction), boot time reduced to **0.6 seconds**, and unbuffered log output enabled (`flush=True`).
 
 

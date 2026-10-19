@@ -47,11 +47,45 @@ DATA_DIR = ROOT_DIR / "data"
 DEFAULT_SILHOUETTE = "https://s3.glbimg.com/v1/AUTH_58d78b787ec34892b5aaa0c7a146155f/clubes_2026/silhuetas/OUT/220x220.png"
 
 
+class ScoutsBySeasonRound:
+    """Memory-efficient indexed and cached (season, round) scout slices.
+
+    Instead of pre-allocating 359,385 Python dicts (which consumes ~545 MB of RAM and
+    triggers Linux OOM container thrashing on Railway), this indexes the DataFrame
+    by (season, round) using ~75 MB, slicing and caching dicts on demand.
+    """
+
+    def __init__(self, df: pd.DataFrame):
+        self.df = df.set_index(["season", "round"], drop=False)
+        self._cache: Dict[Tuple[int, int], Dict[int, Dict[str, Any]]] = {}
+
+    def get(self, key: Tuple[int, int], default=None) -> Dict[int, Dict[str, Any]]:
+        if key in self._cache:
+            return self._cache[key]
+        if key not in self.df.index:
+            return default if default is not None else {}
+        slice_df = self.df.loc[key]
+        if isinstance(slice_df, pd.Series):
+            slice_df = slice_df.to_frame().T
+        res = {int(row["player_id"]): row for row in slice_df.to_dict("records")}
+        self._cache[key] = res
+        return res
+
+    def __getitem__(self, key: Tuple[int, int]) -> Dict[int, Dict[str, Any]]:
+        return self.get(key, {})
+
+    def __contains__(self, key: Tuple[int, int]) -> bool:
+        return key in self.df.index
+
+    def __len__(self) -> int:
+        return len(self.df.index.unique())
+
+
 class CLTDataStore:
     """Fast in-memory lookup tables for all 12 seasons (2014-2025)."""
 
     def __init__(self):
-        print("Initializing CLTDataStore (teams, matches, career stats, normalized scouts)...")
+        print("Initializing CLTDataStore (teams, matches, career stats, normalized scouts)...", flush=True)
         self.df_teams = pd.read_parquet(DATA_DIR / "teams.parquet")
         self.df_matches = pd.read_parquet(DATA_DIR / "matches.parquet")
         self.df_career = pd.read_parquet(DATA_DIR / "player_career_stats.parquet")
@@ -59,7 +93,7 @@ class CLTDataStore:
 
         # 1. Teams lookup
         self.teams_by_id: Dict[int, Dict[str, Any]] = {}
-        for _, r in self.df_teams.iterrows():
+        for r in self.df_teams.to_dict("records"):
             tid = int(r["team_id"])
             abbr = str(r["abbreviation"])
             self.teams_by_id[tid] = {
@@ -72,7 +106,7 @@ class CLTDataStore:
 
         # 2. Career players lookup (for Bucket of the Souls permanent roster swaps)
         self.players_by_id: Dict[int, Dict[str, Any]] = {}
-        for _, p_row in self.df_career.iterrows():
+        for p_row in self.df_career.to_dict("records"):
             pid = int(p_row["player_id"])
             top_teams = (
                 json.loads(p_row["top_teams_json"])
@@ -113,17 +147,10 @@ class CLTDataStore:
                 })
             self.matches_by_sr[(int(s), int(r))] = m_list
 
-        # 4. Scouts by (season, round) -> {player_id: dict}
-        self.scouts_by_sr: Dict[Tuple[int, int], Dict[int, Dict[str, Any]]] = {}
-        cols = ["season", "round", "player_id", "team_id", "position_id", "played", "points", "base_norm_score"] + UNIVERSAL_SCOUTS
-        records = self.df_scouts[cols].to_dict("records")
-        for rec in records:
-            key = (int(rec["season"]), int(rec["round"]))
-            if key not in self.scouts_by_sr:
-                self.scouts_by_sr[key] = {}
-            self.scouts_by_sr[key][int(rec["player_id"])] = rec
+        # 4. Scouts by (season, round) -> on-demand indexed and cached
+        self.scouts_by_sr = ScoutsBySeasonRound(self.df_scouts)
 
-        print(f"-> CLTDataStore ready: {len(self.scouts_by_sr)} (season, round) slices indexed.")
+        print(f"-> CLTDataStore ready: {len(self.scouts_by_sr)} (season, round) slices indexed.", flush=True)
 
 
 class CLTGameEngine:
